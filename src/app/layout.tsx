@@ -3,9 +3,9 @@ import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 
 export const metadata: Metadata = {
-  title: "세움 Plan OS",
+  title: "세움 Plan OS — 설계팀",
   description:
-    "세움 설계팀 전용 OS — 도면 업로드, 3D 작업, 협의도면, 인허가, 외주 소통 통합 플랫폼",
+    "세움 설계팀 전용 워크스페이스 — 계약·도면·인허가·협의·현장을 한 곳에서",
 };
 
 export default function RootLayout({

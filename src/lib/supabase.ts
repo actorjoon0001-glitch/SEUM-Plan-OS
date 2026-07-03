@@ -1,26 +1,27 @@
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+
 /**
- * Supabase 클라이언트 (추후 연동 예정)
+ * 세움os Supabase 클라이언트.
  *
- * 사용 준비:
- *   1) npm install @supabase/supabase-js
- *   2) .env.example 을 참고해 .env.local 에 키 입력
- *   3) 아래 createClient 주석을 해제
- *
- * 현재는 개발용 mock-data 를 사용하므로 환경변수만 노출해 둡니다.
+ * URL / publishable(anon) 키는 .env.local 에 설정합니다.
+ * publishable 키는 클라이언트 노출용이라 NEXT_PUBLIC_ 접두어를 사용합니다.
+ * 실제 데이터 접근 권한은 Supabase 의 RLS 정책을 따릅니다.
  */
 
-export const supabaseConfig = {
-  url: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-  anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
-  storageBucket: process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET ?? "drawings",
-};
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-export const isSupabaseConfigured =
-  Boolean(supabaseConfig.url) && Boolean(supabaseConfig.anonKey);
+export const isSupabaseConfigured = Boolean(url && anonKey);
 
-// import { createClient } from "@supabase/supabase-js";
-//
-// export const supabase = createClient(
-//   supabaseConfig.url,
-//   supabaseConfig.anonKey,
-// );
+let cached: SupabaseClient | null = null;
+
+/** 설정되어 있으면 Supabase 클라이언트를, 아니면 null 을 반환 */
+export function getSupabase(): SupabaseClient | null {
+  if (!url || !anonKey) return null;
+  if (!cached) {
+    cached = createClient(url, anonKey, {
+      auth: { persistSession: false },
+    });
+  }
+  return cached;
+}
