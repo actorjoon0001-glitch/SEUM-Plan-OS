@@ -1,0 +1,17 @@
+# Netlify 배포 설정 — 세움 Plan OS (Next.js)
+# Next.js 공식 런타임(@netlify/plugin-nextjs)이 자동 적용됩니다.
+
+[build]
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# ⚠️ 환경변수는 이 파일이 아니라 Netlify 대시보드에 등록하세요.
+# Site settings → Environment variables 에 아래 2개 추가:
+#   NEXT_PUBLIC_SUPABASE_URL
+#   NEXT_PUBLIC_SUPABASE_ANON_KEY
+# (.env.local 은 git 에 커밋되지 않으므로 Netlify 는 이 값을 모릅니다)
