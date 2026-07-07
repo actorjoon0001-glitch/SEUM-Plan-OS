@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import Sidebar from "@/components/Sidebar";
 import LoginScreen from "@/components/LoginScreen";
+import { UserProvider } from "@/components/UserContext";
 import type { Employee } from "@/types";
 
 /**
@@ -76,15 +77,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar
-        userName={employee?.name}
-        userEmail={session?.user.email}
-        userTeam={employee?.team}
-      />
-      <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-7xl px-8 py-8">{children}</div>
-      </main>
-    </div>
+    <UserProvider value={{ session, employee }}>
+      <div className="flex h-screen overflow-hidden">
+        <Sidebar
+          userName={employee?.name}
+          userEmail={session?.user.email}
+          userTeam={employee?.team}
+        />
+        <main className="flex-1 overflow-y-auto">
+          <div className="mx-auto max-w-7xl px-8 py-8">{children}</div>
+        </main>
+      </div>
+    </UserProvider>
   );
 }
