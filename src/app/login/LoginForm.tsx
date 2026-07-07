@@ -16,20 +16,31 @@ export default function LoginForm({ redirectTo }: { redirectTo: string }) {
     setLoading(true);
     setError(null);
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
 
-    if (error) {
-      setError("이메일 또는 비밀번호가 올바르지 않습니다.");
+      if (error) {
+        // 원인 파악을 위해 실제 메시지를 표시
+        const msg =
+          error.message === "Invalid login credentials"
+            ? "이메일 또는 비밀번호가 올바르지 않습니다."
+            : `로그인 실패: ${error.message}`;
+        setError(msg);
+        setLoading(false);
+        return;
+      }
+
+      router.push(redirectTo || "/");
+      router.refresh();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(`연결 오류: ${message}`);
       setLoading(false);
-      return;
     }
-
-    router.push(redirectTo || "/");
-    router.refresh();
   }
 
   return (
