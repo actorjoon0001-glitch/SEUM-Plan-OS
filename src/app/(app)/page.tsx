@@ -3,7 +3,12 @@ import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
 import { Card, CardHeader } from "@/components/Card";
 import { ConnectionNotice } from "@/components/Notice";
-import { getContracts, getDrawings, getSubmissions } from "@/lib/data";
+import {
+  getContracts,
+  getDrawings,
+  getSubmissions,
+  getEContracts,
+} from "@/lib/data";
 import {
   contractTitle,
   designOwner,
@@ -15,13 +20,16 @@ import { formatDate } from "@/lib/format";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const [contractsRes, drawingsRes, submissionsRes] = await Promise.all([
-    getContracts(),
-    getDrawings(),
-    getSubmissions(),
-  ]);
+  const [contractsRes, econtractsRes, drawingsRes, submissionsRes] =
+    await Promise.all([
+      getContracts(),
+      getEContracts(),
+      getDrawings(),
+      getSubmissions(),
+    ]);
 
   const contracts = contractsRes.data;
+  const econtracts = econtractsRes.data;
   const drawings = drawingsRes.data;
   const submissions = submissionsRes.data;
 
@@ -29,8 +37,8 @@ export default async function DashboardPage() {
   const urgent = contracts.filter((c) => c.is_urgent && !isDesignDone(c));
 
   const stats = [
-    { label: "설계 대상 계약", value: contracts.length, unit: "건", href: "/contracts", tone: "text-brand-600" },
-    { label: "설계 진행 필요", value: designPending.length, unit: "건", href: "/contracts", tone: "text-amber-600" },
+    { label: "수기 계약서", value: contracts.length, unit: "건", href: "/contracts", tone: "text-brand-600" },
+    { label: "전자계약서", value: econtracts.length, unit: "건", href: "/econtracts", tone: "text-violet-600" },
     { label: "등록 도면", value: drawings.length, unit: "개", href: "/drawings", tone: "text-indigo-600" },
     { label: "인허가 서류", value: submissions.length, unit: "건", href: "/permits", tone: "text-emerald-600" },
   ];
@@ -85,7 +93,7 @@ export default async function DashboardPage() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader
-              title="설계 진행 필요"
+              title={`설계 진행 필요 (${designPending.length})`}
               action={<span className="text-xs text-slate-400">급한 건 우선</span>}
             />
             {attention.length === 0 ? (
