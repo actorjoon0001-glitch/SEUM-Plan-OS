@@ -239,42 +239,6 @@ export function getEContractsForContract(
 // 직원 (설계팀 담당자)
 // ─────────────────────────────────────────────────────────────
 
-/** 현재 로그인한 사용자와 매칭되는 직원 정보 */
-export async function getCurrentEmployee(): Promise<{
-  email: string | null;
-  employee: Employee | null;
-}> {
-  if (!isSupabaseConfigured) return { email: null, employee: null };
-  try {
-    const sb = await createClient();
-    const {
-      data: { user },
-    } = await sb.auth.getUser();
-    if (!user) return { email: null, employee: null };
-
-    let employee: Employee | null = null;
-    const byAuth = await sb
-      .from("employees")
-      .select("*")
-      .eq("auth_user_id", user.id)
-      .maybeSingle();
-    employee = (byAuth.data as Employee) ?? null;
-
-    if (!employee && user.email) {
-      const byEmail = await sb
-        .from("employees")
-        .select("*")
-        .eq("email", user.email)
-        .maybeSingle();
-      employee = (byEmail.data as Employee) ?? null;
-    }
-
-    return { email: user.email ?? null, employee };
-  } catch {
-    return { email: null, employee: null };
-  }
-}
-
 export function getDesignTeam() {
   return run<Employee[]>([], async () => {
     const sb = await createClient();
