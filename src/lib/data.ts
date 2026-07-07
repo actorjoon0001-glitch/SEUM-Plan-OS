@@ -7,6 +7,7 @@ import type {
   SiteProgressPhoto,
   Employee,
   Payment,
+  EContract,
 } from "@/types";
 
 /** 데이터 조회 공통 결과 래퍼 — 화면에서 연결/설정 상태를 안내하기 위함 */
@@ -165,6 +166,71 @@ export function getPayments(contractId: number) {
       .order("payment_date", { ascending: true, nullsFirst: false });
     if (error) throw new Error(error.message);
     return (data ?? []) as Payment[];
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// 전자계약서 (econtracts)
+// ─────────────────────────────────────────────────────────────
+
+export function getEContracts() {
+  return run<EContract[]>([], async () => {
+    const sb = getSupabase()!;
+    const { data, error } = await sb
+      .from("econtracts")
+      .select("*")
+      .order("contract_date", { ascending: false, nullsFirst: false })
+      .limit(500);
+    if (error) throw new Error(error.message);
+    return (data ?? []) as EContract[];
+  });
+}
+
+export function getEContract(id: number) {
+  return run<EContract | null>(null, async () => {
+    const sb = getSupabase()!;
+    const { data, error } = await sb
+      .from("econtracts")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return (data as EContract) ?? null;
+  });
+}
+
+/**
+ * 특정 계약에 연결되는 전자계약서 조회.
+ * econtracts 는 contracts 와 직접 FK 가 없어 contract_no(=local_id) 또는
+ * client_name(=customer_name) 으로 매칭한다.
+ */
+export function getEContractsForContract(
+  localId: string | null,
+  customerName: string | null,
+) {
+  return run<EContract[]>([], async () => {
+    const sb = getSupabase()!;
+    const found = new Map<number, EContract>();
+
+    if (localId) {
+      const { data, error } = await sb
+        .from("econtracts")
+        .select("*")
+        .eq("contract_no", localId)
+        .limit(20);
+      if (error) throw new Error(error.message);
+      for (const e of (data ?? []) as EContract[]) found.set(e.id, e);
+    }
+    if (customerName) {
+      const { data, error } = await sb
+        .from("econtracts")
+        .select("*")
+        .eq("client_name", customerName)
+        .limit(20);
+      if (error) throw new Error(error.message);
+      for (const e of (data ?? []) as EContract[]) found.set(e.id, e);
+    }
+    return [...found.values()];
   });
 }
 

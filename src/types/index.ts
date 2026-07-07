@@ -120,6 +120,23 @@ export interface Employee {
   status: string | null;
 }
 
+/** 전자계약서 (econtracts) */
+export interface EContract {
+  id: number;
+  contract_no: string | null;
+  status: string | null;
+  client_name: string | null;
+  site_address: string | null;
+  showroom: string | null;
+  salesperson: string | null;
+  contract_date: string | null;
+  total_amount: number | string | null;
+  /** 전자계약서 상세 내용 (jsonb) */
+  data: unknown;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
 /** 대금 (payments) */
 export interface Payment {
   id: number;
