@@ -39,6 +39,17 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
 | 협의·소통 | `/messages` | `contract_chat_messages` | 계약별 협의/외주 소통 |
 | 현장 사진 | `/site-photos` | `site_progress_photos` | 현장 진행 사진 |
 
+## 로그인 (인증)
+
+- **세움os 계정(이메일·비밀번호)으로 그대로 로그인**합니다. 같은 Supabase 프로젝트의
+  Supabase Auth 를 공유하므로 별도 계정 생성이 필요 없습니다.
+- 로그인하지 않으면 모든 페이지가 `/login` 으로 리다이렉트됩니다 (`src/middleware.ts`).
+- 로그인 사용자는 `employees` 테이블(`auth_user_id`/`email` 매칭)로 이름·팀을 표시합니다.
+- Supabase SSR(`@supabase/ssr`) 쿠키 세션: `src/lib/supabase/{client,server,middleware}.ts`.
+
+> 참고: 현재는 **앱 접근을 로그인으로 막는** 방식입니다. 데이터 자체를 팀별로 더 엄격히
+> 제한하려면 Supabase RLS 정책을 인증 기반으로 강화하면 됩니다 (다음 단계 선택).
+
 ## 데이터 연결 구조
 
 - 모든 데이터 접근은 `src/lib/data.ts` 에 모여 있습니다. (테이블별 조회 함수)

@@ -3,9 +3,20 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navItems } from "@/lib/navigation";
+import LogoutButton from "@/components/LogoutButton";
 
-export default function Sidebar() {
+export default function Sidebar({
+  userName,
+  userEmail,
+  userTeam,
+}: {
+  userName?: string | null;
+  userEmail?: string | null;
+  userTeam?: string | null;
+}) {
   const pathname = usePathname();
+  const displayName = userName?.trim() || "세움 설계팀";
+  const initial = displayName.charAt(0);
 
   return (
     <aside className="flex h-screen w-64 flex-col border-r border-slate-200 bg-white">
@@ -61,13 +72,23 @@ export default function Sidebar() {
       {/* 하단 사용자 영역 */}
       <div className="border-t border-slate-200 p-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-600">
-            세
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">
+            {initial}
           </div>
-          <div className="leading-tight">
-            <p className="text-sm font-medium text-slate-800">세움 설계팀</p>
-            <p className="text-[11px] text-slate-400">team@seum.kr</p>
+          <div className="min-w-0 flex-1 leading-tight">
+            <p className="truncate text-sm font-medium text-slate-800">
+              {displayName}
+              {userTeam ? (
+                <span className="ml-1 text-[11px] font-normal text-slate-400">
+                  {userTeam}
+                </span>
+              ) : null}
+            </p>
+            <p className="truncate text-[11px] text-slate-400">
+              {userEmail ?? "team@seum.kr"}
+            </p>
           </div>
+          {userEmail ? <LogoutButton /> : null}
         </div>
       </div>
     </aside>

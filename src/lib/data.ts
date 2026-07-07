@@ -1,4 +1,5 @@
-import { getSupabase, isSupabaseConfigured } from "./supabase";
+import { createClient } from "./supabase/server";
+import { isSupabaseConfigured } from "./supabase/config";
 import type {
   Contract,
   ContractDrawing,
@@ -50,7 +51,7 @@ const notDeleted = <T extends { is_deleted?: boolean | null }>(rows: T[]) =>
 /** 설계팀 대상 계약 목록 (삭제 제외, 최신 계약일 순) */
 export function getContracts() {
   return run<Contract[]>([], async () => {
-    const sb = getSupabase()!;
+    const sb = await createClient();
     const { data, error } = await sb
       .from("contracts")
       .select("*")
@@ -64,7 +65,7 @@ export function getContracts() {
 /** local_id 로 단일 계약 조회 */
 export function getContract(localId: string) {
   return run<Contract | null>(null, async () => {
-    const sb = getSupabase()!;
+    const sb = await createClient();
     const { data, error } = await sb
       .from("contracts")
       .select("*")
@@ -82,7 +83,7 @@ export function getContract(localId: string) {
 
 export function getDrawings(contractLocalId?: string) {
   return run<ContractDrawing[]>([], async () => {
-    const sb = getSupabase()!;
+    const sb = await createClient();
     let q = sb
       .from("contract_drawings")
       .select("*")
@@ -101,7 +102,7 @@ export function getDrawings(contractLocalId?: string) {
 
 export function getSubmissions(contractLocalId?: string) {
   return run<HaeyoungSubmission[]>([], async () => {
-    const sb = getSupabase()!;
+    const sb = await createClient();
     let q = sb
       .from("haeyoung_submissions")
       .select("*")
@@ -120,7 +121,7 @@ export function getSubmissions(contractLocalId?: string) {
 
 export function getMessages(contractId?: string, limit = 300) {
   return run<ContractChatMessage[]>([], async () => {
-    const sb = getSupabase()!;
+    const sb = await createClient();
     let q = sb
       .from("contract_chat_messages")
       .select("*")
@@ -139,7 +140,7 @@ export function getMessages(contractId?: string, limit = 300) {
 
 export function getSitePhotos(contractLocalId?: string) {
   return run<SiteProgressPhoto[]>([], async () => {
-    const sb = getSupabase()!;
+    const sb = await createClient();
     let q = sb
       .from("site_progress_photos")
       .select("*")
@@ -158,7 +159,7 @@ export function getSitePhotos(contractLocalId?: string) {
 
 export function getPayments(contractId: number) {
   return run<Payment[]>([], async () => {
-    const sb = getSupabase()!;
+    const sb = await createClient();
     const { data, error } = await sb
       .from("payments")
       .select("*")
@@ -175,7 +176,7 @@ export function getPayments(contractId: number) {
 
 export function getEContracts() {
   return run<EContract[]>([], async () => {
-    const sb = getSupabase()!;
+    const sb = await createClient();
     const { data, error } = await sb
       .from("econtracts")
       .select("*")
@@ -188,7 +189,7 @@ export function getEContracts() {
 
 export function getEContract(id: number) {
   return run<EContract | null>(null, async () => {
-    const sb = getSupabase()!;
+    const sb = await createClient();
     const { data, error } = await sb
       .from("econtracts")
       .select("*")
@@ -209,7 +210,7 @@ export function getEContractsForContract(
   customerName: string | null,
 ) {
   return run<EContract[]>([], async () => {
-    const sb = getSupabase()!;
+    const sb = await createClient();
     const found = new Map<number, EContract>();
 
     if (localId) {
@@ -238,9 +239,45 @@ export function getEContractsForContract(
 // 직원 (설계팀 담당자)
 // ─────────────────────────────────────────────────────────────
 
+/** 현재 로그인한 사용자와 매칭되는 직원 정보 */
+export async function getCurrentEmployee(): Promise<{
+  email: string | null;
+  employee: Employee | null;
+}> {
+  if (!isSupabaseConfigured) return { email: null, employee: null };
+  try {
+    const sb = await createClient();
+    const {
+      data: { user },
+    } = await sb.auth.getUser();
+    if (!user) return { email: null, employee: null };
+
+    let employee: Employee | null = null;
+    const byAuth = await sb
+      .from("employees")
+      .select("*")
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
+    employee = (byAuth.data as Employee) ?? null;
+
+    if (!employee && user.email) {
+      const byEmail = await sb
+        .from("employees")
+        .select("*")
+        .eq("email", user.email)
+        .maybeSingle();
+      employee = (byEmail.data as Employee) ?? null;
+    }
+
+    return { email: user.email ?? null, employee };
+  } catch {
+    return { email: null, employee: null };
+  }
+}
+
 export function getDesignTeam() {
   return run<Employee[]>([], async () => {
-    const sb = getSupabase()!;
+    const sb = await createClient();
     const { data, error } = await sb
       .from("employees")
       .select("*")
