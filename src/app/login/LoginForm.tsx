@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -10,6 +10,38 @@ export default function LoginForm({ redirectTo }: { redirectTo: string }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [embedded, setEmbedded] = useState(false);
+
+  // 다른 도메인의 iframe 안에 임베드되었는지 감지
+  // (임베드 상태에서는 서드파티 쿠키 차단으로 로그인 세션이 유지되지 않음)
+  useEffect(() => {
+    try {
+      setEmbedded(window.self !== window.top);
+    } catch {
+      // window.top 접근이 막히면 교차 도메인 iframe 이 확실함
+      setEmbedded(true);
+    }
+  }, []);
+
+  if (embedded) {
+    return (
+      <div className="space-y-4 text-center">
+        <p className="text-sm text-slate-600">
+          통합플랫폼 안에서는 보안(쿠키) 정책으로 로그인이 제한됩니다.
+          <br />
+          아래 버튼으로 새 탭에서 열어 로그인하세요.
+        </p>
+        <a
+          href={typeof window !== "undefined" ? window.location.origin : "/"}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block w-full rounded-lg bg-brand-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
+        >
+          새 탭에서 설계 OS 열기
+        </a>
+      </div>
+    );
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
