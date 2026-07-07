@@ -1,17 +1,24 @@
-import { createBrowserClient } from "@supabase/ssr";
+import { createClient as createSupabaseClient, type SupabaseClient } from "@supabase/supabase-js";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config";
 
 /**
- * 브라우저(클라이언트 컴포넌트)용 Supabase 클라이언트 — 로그인 등에 사용.
+ * 브라우저용 Supabase 클라이언트 (싱글턴).
  *
- * auth.lock 을 통과형(pass-through)으로 지정해 navigator.locks 를 우회한다.
- * iframe(다른 도메인 임베드) 안에서 navigator.locks 가 잠겨 로그인이
- * 무한 대기하는 문제를 방지한다.
+ * 세션을 localStorage 에 저장한다 (쿠키 아님). 이렇게 하면 통합플랫폼의
+ * iframe(교차 도메인) 안에서도 서드파티 쿠키 차단에 걸리지 않고 로그인이 유지된다.
+ * auth.lock 통과형으로 navigator.locks 우회 (iframe 무한 대기 방지).
  */
-export function createClient() {
-  return createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: {
-      lock: async (_name, _acquireTimeout, fn) => fn(),
-    },
-  });
+let browserClient: SupabaseClient | null = null;
+
+export function createClient(): SupabaseClient {
+  if (!browserClient) {
+    browserClient = createSupabaseClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        lock: async (_name, _acquireTimeout, fn) => fn(),
+      },
+    });
+  }
+  return browserClient;
 }

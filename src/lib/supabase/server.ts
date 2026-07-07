@@ -1,28 +1,15 @@
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config";
 
 /**
- * 서버 컴포넌트 / 라우트 핸들러용 Supabase 클라이언트.
- * 쿠키에 저장된 세션을 읽어 인증된 요청을 보낸다.
+ * 서버 컴포넌트용 Supabase 클라이언트 (anon 키).
+ *
+ * 로그인은 클라이언트(localStorage)에서 처리하므로 서버는 사용자 세션을 갖지 않고
+ * anon 키로 데이터를 읽는다. 접근 범위는 Supabase RLS 정책을 따른다.
+ * (쿠키를 쓰지 않아 iframe 임베드 환경에서도 안전하게 동작한다.)
  */
-export async function createClient() {
-  const cookieStore = await cookies();
-
-  return createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll();
-      },
-      setAll(cookiesToSet) {
-        try {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options),
-          );
-        } catch {
-          // 서버 컴포넌트에서 호출된 경우 set 이 무시될 수 있음 (미들웨어가 갱신 담당)
-        }
-      },
-    },
+export function createClient() {
+  return createSupabaseClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: false },
   });
 }

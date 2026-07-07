@@ -43,9 +43,11 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
 
 - **세움os 계정(이메일·비밀번호)으로 그대로 로그인**합니다. 같은 Supabase 프로젝트의
   Supabase Auth 를 공유하므로 별도 계정 생성이 필요 없습니다.
-- 로그인하지 않으면 모든 페이지가 `/login` 으로 리다이렉트됩니다 (`src/middleware.ts`).
-- 로그인 사용자는 `employees` 테이블(`auth_user_id`/`email` 매칭)로 이름·팀을 표시합니다.
-- Supabase SSR(`@supabase/ssr`) 쿠키 세션: `src/lib/supabase/{client,server,middleware}.ts`.
+- **클라이언트(localStorage) 세션** 방식입니다 (`src/components/AppShell.tsx` 게이트).
+  쿠키/미들웨어를 쓰지 않아 **통합플랫폼의 iframe(교차 도메인) 안에서도 그대로 로그인**됩니다.
+- 미로그인 시 전체 화면 로그인(`LoginScreen`)을 표시하고, 로그인하면 앱을 보여줍니다.
+- 로그인 사용자는 `employees`(`auth_user_id`/`email` 매칭)로 이름·팀을 표시합니다.
+- 데이터는 서버 컴포넌트가 anon 키로 읽습니다 (`src/lib/supabase/server.ts`).
 
 > 참고: 현재는 **앱 접근을 로그인으로 막는** 방식입니다. 데이터 자체를 팀별로 더 엄격히
 > 제한하려면 Supabase RLS 정책을 인증 기반으로 강화하면 됩니다 (다음 단계 선택).
