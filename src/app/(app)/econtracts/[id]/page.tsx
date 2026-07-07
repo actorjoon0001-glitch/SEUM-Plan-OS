@@ -4,6 +4,7 @@ import StatusBadge from "@/components/StatusBadge";
 import { Card, CardHeader } from "@/components/Card";
 import Notice, { ConnectionNotice } from "@/components/Notice";
 import JsonView from "@/components/JsonView";
+import CurrentUserBadge from "@/components/CurrentUserBadge";
 import { getEContract } from "@/lib/data";
 import { formatDate, formatMoney } from "@/lib/format";
 
@@ -40,6 +41,7 @@ export default async function EContractDetailPage({
 
   return (
     <>
+      <CurrentUserBadge />
       <BackLink />
       <PageHeader
         title={`전자계약서 ${e.contract_no || `#${e.id}`}`}

@@ -1,5 +1,6 @@
 import { createClient as createSupabaseClient, type SupabaseClient } from "@supabase/supabase-js";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config";
+import { authStorage } from "./storage";
 
 /**
  * 브라우저용 Supabase 클라이언트 (싱글턴).
@@ -16,6 +17,7 @@ export function createClient(): SupabaseClient {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
+        storage: authStorage,
         lock: async (_name, _acquireTimeout, fn) => fn(),
       },
     });
