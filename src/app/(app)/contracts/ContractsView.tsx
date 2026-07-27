@@ -25,14 +25,16 @@ export default function ContractsView({
   contracts: Contract[];
 }) {
   const router = useRouter();
-  const [year, setYear] = useState(ALL);
-  const [month, setMonth] = useState(ALL);
+  // 기본값: 현재(해당) 년·월
+  const [year, setYear] = useState(() => String(new Date().getFullYear()));
+  const [month, setMonth] = useState(() => String(new Date().getMonth() + 1));
   const [showroom, setShowroom] = useState(ALL);
   const [tab, setTab] = useState<Tab>("all");
   const [query, setQuery] = useState("");
 
   const years = useMemo(() => {
     const set = new Set<string>();
+    set.add(String(new Date().getFullYear())); // 현재 년도는 항상 포함
     for (const c of contracts) {
       const y = c.contract_date?.slice(0, 4);
       if (y) set.add(y);
