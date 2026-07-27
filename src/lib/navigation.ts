@@ -52,15 +52,9 @@ export const navSections: NavSection[] = [
     items: [
       {
         href: "/drawings",
-        label: "도면",
-        description: "계약별 도면 (3D 포함)",
+        label: "시공도면",
+        description: "계약별 시공도면 (3D 포함)",
         icon: "M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12",
-      },
-      {
-        href: "/permits",
-        label: "인허가",
-        description: "인허가 · 제출 서류",
-        icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
       },
     ],
   },
