@@ -93,7 +93,12 @@ export function showroomOf(c: Contract): string {
   const v = pick(c, ["showroom", "showroom_name", "showroom_id"]);
   if (!v) return "-";
   const raw = String(v).trim();
-  return SHOWROOM_KO[raw.toLowerCase()] ?? raw;
+  const key = raw.toLowerCase();
+  if (SHOWROOM_KO[key]) return SHOWROOM_KO[key];
+  // showroom1 → 1전시장, showroom3 → 3전시장 …
+  const m = key.match(/^showroom\s*_?(\d+)$/);
+  if (m) return `${m[1]}전시장`;
+  return raw;
 }
 
 export const TYPE_LABEL: Record<TypeKey, string> = {
