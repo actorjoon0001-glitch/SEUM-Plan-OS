@@ -1,24 +1,13 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import { Card } from "@/components/Card";
+import { ConnectionNotice } from "@/components/Notice";
+import { getSubmissions } from "@/lib/data";
+import { formatDate, formatFileSize } from "@/lib/format";
+import { FIRMS, isFirmSlug, submissionFirm } from "@/lib/partners";
 
 export const dynamic = "force-dynamic";
-
-/** 외부 건축 협력사 정의 */
-const PARTNERS: Record<string, { name: string; desc: string }> = {
-  haeyoung: {
-    name: "해영 건축사",
-    desc: "해영 건축사와 협력하는 인허가·설계 건입니다.",
-  },
-  pil: {
-    name: "필건축사",
-    desc: "필 건축사와 협력하는 인허가·설계 건입니다.",
-  },
-  civil: {
-    name: "토목건축사",
-    desc: "토목 건축사와 협력하는 인허가·설계 건입니다.",
-  },
-};
 
 export default async function PartnerPage({
   params,
@@ -26,30 +15,88 @@ export default async function PartnerPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const partner = PARTNERS[slug];
-  if (!partner) notFound();
+  if (!isFirmSlug(slug)) notFound();
+  const firm = FIRMS[slug];
+
+  const res = await getSubmissions();
+  const items = res.data.filter((s) => submissionFirm(s) === slug);
 
   return (
     <>
-      <PageHeader title={partner.name} description={partner.desc} />
+      <PageHeader title={firm.name} description={firm.desc} />
+      <ConnectionNotice configured={res.configured} error={res.error} />
 
-      <Card className="p-8 text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 text-brand-600">
-          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.7} stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-3M9 9h.01M9 12h.01M9 15h.01M9 18h.01"
-            />
-          </svg>
+      <p className="mb-2 text-xs text-slate-400">{items.length}건</p>
+
+      <Card>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-100 text-left text-xs text-slate-400">
+                <th className="px-5 py-3 font-medium">제목 / 파일</th>
+                <th className="px-5 py-3 font-medium">계약</th>
+                <th className="px-5 py-3 font-medium">담당</th>
+                <th className="px-5 py-3 font-medium">크기</th>
+                <th className="px-5 py-3 font-medium">업로드</th>
+                <th className="px-5 py-3 font-medium"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {items.map((s) => (
+                <tr key={s.id} className="hover:bg-slate-50">
+                  <td className="px-5 py-3">
+                    <p className="font-medium text-slate-800">
+                      {s.title || s.file_name || "(제목 없음)"}
+                    </p>
+                    {s.description && (
+                      <p className="text-xs text-slate-400">{s.description}</p>
+                    )}
+                  </td>
+                  <td className="px-5 py-3">
+                    {s.contract_local_id ? (
+                      <Link
+                        href={`/contracts/${encodeURIComponent(s.contract_local_id)}`}
+                        className="text-slate-600 hover:text-brand-600 hover:underline"
+                      >
+                        {s.contract_local_id}
+                      </Link>
+                    ) : (
+                      <span className="text-slate-300">-</span>
+                    )}
+                  </td>
+                  <td className="px-5 py-3 text-slate-600">
+                    {s.design_manager ?? s.uploaded_by_name ?? "-"}
+                  </td>
+                  <td className="px-5 py-3 text-slate-500">
+                    {formatFileSize(s.file_size)}
+                  </td>
+                  <td className="px-5 py-3 text-slate-500">
+                    {formatDate(s.uploaded_at)}
+                  </td>
+                  <td className="px-5 py-3 text-right">
+                    {s.file_url && (
+                      <a
+                        href={s.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-medium text-brand-600 hover:underline"
+                      >
+                        열기
+                      </a>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {items.length === 0 && !res.error && (
+                <tr>
+                  <td colSpan={6} className="px-5 py-10 text-center text-sm text-slate-400">
+                    {firm.name}가 올린 자료가 아직 없습니다.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-        <p className="mt-4 text-sm font-semibold text-slate-800">
-          {partner.name} 협력 화면 준비 중
-        </p>
-        <p className="mx-auto mt-1 max-w-md text-sm text-slate-500">
-          이 협력사가 담당하는 계약·인허가·도면을 연결할 예정입니다. 어떤 정보를
-          보여줄지 알려주시면 세움os 데이터로 채워 드리겠습니다.
-        </p>
       </Card>
     </>
   );
