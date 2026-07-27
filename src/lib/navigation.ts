@@ -6,6 +6,8 @@ export interface NavItem {
   /** 인라인 SVG path (24x24 viewBox, stroke 기반) */
   icon: string;
   description: string;
+  /** 상위 항목의 하위(들여쓰기) 항목 여부 */
+  indent?: boolean;
 }
 
 export interface NavSection {
@@ -27,6 +29,27 @@ export const navSections: NavSection[] = [
         label: "우선순위",
         description: "계약금 수령 건 · 계약일 빠른 순 설계 큐",
         icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z",
+      },
+      {
+        href: "/priority?type=container",
+        label: "컨테이너",
+        description: "컨테이너/농막",
+        indent: true,
+        icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
+      },
+      {
+        href: "/priority?type=stay",
+        label: "체류형쉼터",
+        description: "가설건축물축조신고",
+        indent: true,
+        icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
+      },
+      {
+        href: "/priority?type=house",
+        label: "주택",
+        description: "준공용 인허가",
+        indent: true,
+        icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
       },
     ],
   },

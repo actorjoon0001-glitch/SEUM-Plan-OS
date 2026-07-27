@@ -82,10 +82,18 @@ export function showroomOf(c: Contract): string {
 }
 
 export const TYPE_LABEL: Record<TypeKey, string> = {
-  container: "컨테이너/농막",
+  container: "컨테이너",
   stay: "체류형쉼터",
-  house: "전원주택(인허가)",
+  house: "주택",
   etc: "기타",
+};
+
+/** 유형별 인허가 성격 (부가 설명) */
+export const TYPE_NOTE: Record<TypeKey, string> = {
+  container: "",
+  stay: "가설건축물축조신고",
+  house: "준공용 인허가",
+  etc: "",
 };
 
 /** 유형 배지 색상 */
