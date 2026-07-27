@@ -69,6 +69,23 @@ export default function ContractsView({
     return c;
   }, [base]);
 
+  // 🔧 임시 진단: 실제 컬럼명/값 확인용 (유형·주소·금액 단위 파악)
+  const diag = useMemo(() => {
+    const sample = base[0] ?? contracts[0];
+    if (!sample) return null;
+    const rec = sample as unknown as Record<string, unknown>;
+    const cols = Object.keys(rec);
+    const rows = cols
+      .map((k) => {
+        const v = rec[k];
+        if (v === null || v === undefined || v === "") return null;
+        const s = typeof v === "object" ? JSON.stringify(v) : String(v);
+        return `${k} = ${s.length > 40 ? s.slice(0, 40) + "…" : s}`;
+      })
+      .filter(Boolean) as string[];
+    return { cols, rows };
+  }, [base, contracts]);
+
   // 탭 + 검색 적용
   const list = useMemo(() => {
     let rows = tab === "all" ? base : base.filter((c) => projectTypeKey(c) === tab);
@@ -172,6 +189,25 @@ export default function ContractsView({
         />
         <span className="whitespace-nowrap text-sm text-slate-500">총 {list.length}건</span>
       </div>
+
+      {/* 🔧 임시 진단 패널 — 실제 컬럼명/값 확인용 (확인 후 제거 예정) */}
+      {diag && (
+        <details className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-xs text-slate-600">
+          <summary className="cursor-pointer font-medium text-amber-700">
+            🔧 데이터 진단 (임시) — 눌러서 펼친 뒤 스크린샷 보내주세요
+          </summary>
+          <div className="mt-2 space-y-1">
+            <p className="font-semibold text-slate-500">전체 컬럼명</p>
+            <p className="break-all font-mono text-[11px]">{diag.cols.join(", ")}</p>
+            <p className="mt-2 font-semibold text-slate-500">첫 계약 값</p>
+            <div className="max-h-64 overflow-auto rounded bg-white p-2 font-mono text-[11px] leading-relaxed">
+              {diag.rows.map((r) => (
+                <div key={r}>{r}</div>
+              ))}
+            </div>
+          </div>
+        </details>
+      )}
 
       {/* 목록 */}
       <Card className="overflow-hidden">
