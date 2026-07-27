@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -16,9 +17,14 @@ import type { Employee } from "@/types";
  * localStorage 세션이라 통합플랫폼 iframe 안에서도 그대로 동작한다.
  */
 export default function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
   const [employee, setEmployee] = useState<Employee | null>(null);
+
+  // 넓은 표가 있는 페이지는 전체 폭 사용 (수기 계약서 · 우선순위)
+  const fullWidth =
+    pathname.startsWith("/contracts") || pathname.startsWith("/priority");
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -85,7 +91,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           userTeam={employee?.team}
         />
         <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-7xl px-8 py-8">{children}</div>
+          <div
+            className={`px-6 py-8 lg:px-8 ${fullWidth ? "" : "mx-auto max-w-7xl"}`}
+          >
+            {children}
+          </div>
         </main>
       </div>
     </UserProvider>
