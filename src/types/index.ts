@@ -36,7 +36,17 @@ export interface Contract {
   final_approved: boolean | null;
   construction_start_ok: boolean | null;
 
+  // 우선순위(설계 진행 큐) 관련 — 실제 컬럼명이 다를 수 있어 선택적
+  project_type?: string | null;
+  deposit_received_at?: string | null;
+  permit_cert_date?: string | null;
+  region?: string | null;
+  site_address?: string | null;
+  address?: string | null;
+
   is_deleted: boolean | null;
+  // select("*") 로 들어오는 그 외 컬럼 접근용
+  [key: string]: unknown;
 }
 
 /** 도면 (contract_drawings) */
