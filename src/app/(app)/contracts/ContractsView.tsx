@@ -82,7 +82,15 @@ export default function ContractsView({
           .includes(q),
       );
     }
-    return rows;
+    // 계약일 빠른순(오름차순), 날짜 없는 건 뒤로
+    return [...rows].sort((a, b) => {
+      const av = a.contract_date ?? "";
+      const bv = b.contract_date ?? "";
+      if (!av && !bv) return 0;
+      if (!av) return 1;
+      if (!bv) return -1;
+      return av.localeCompare(bv);
+    });
   }, [base, tab, query]);
 
   const tabs: { key: Tab; label: string; count: number }[] = [
