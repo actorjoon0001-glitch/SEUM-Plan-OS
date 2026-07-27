@@ -1,6 +1,7 @@
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
+import MonthlyChart, { type MonthlyDatum } from "@/components/MonthlyChart";
 import { Card, CardHeader } from "@/components/Card";
 import { ConnectionNotice } from "@/components/Notice";
 import {
@@ -51,6 +52,24 @@ export default async function DashboardPage() {
   }
   const pipeline = [...byStatus.entries()].sort((a, b) => b[1] - a[1]);
 
+  // 월별 계약 현황 (최근 12개월, contract_date 기준)
+  const now = new Date();
+  const monthly: MonthlyDatum[] = [];
+  const monthIndex = new Map<string, number>();
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    monthIndex.set(key, monthly.length);
+    monthly.push({ month: key, total: 0, done: 0 });
+  }
+  for (const c of contracts) {
+    const key = c.contract_date?.slice(0, 7) ?? "";
+    const idx = monthIndex.get(key);
+    if (idx === undefined) continue;
+    monthly[idx].total += 1;
+    if (isDesignDone(c)) monthly[idx].done += 1;
+  }
+
   // 설계 필요 계약 (급한 것 우선, 최근 계약일 순)
   const attention = [...designPending]
     .sort((a, b) => {
@@ -86,6 +105,11 @@ export default async function DashboardPage() {
             </Card>
           </Link>
         ))}
+      </div>
+
+      {/* 월별 계약 현황 */}
+      <div className="mt-6">
+        <MonthlyChart data={monthly} />
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
