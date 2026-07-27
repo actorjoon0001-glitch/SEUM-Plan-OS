@@ -6,6 +6,17 @@ import { Card } from "@/components/Card";
 import type { ContractDrawing } from "@/types";
 import { formatDate, fileExt } from "@/lib/format";
 
+// 도면 종류 영문 값 → 한글 표시
+const KIND_LABEL: Record<string, string> = {
+  construction: "시공",
+  design1: "설계1",
+  design2: "설계2",
+  design3: "설계3",
+};
+function kindLabel(k: string): string {
+  return KIND_LABEL[k] ?? k;
+}
+
 export default function DrawingsView({
   drawings,
 }: {
@@ -55,7 +66,7 @@ export default function DrawingsView({
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
-              {k}
+              {kindLabel(k)}
             </button>
           ))}
         </div>
@@ -85,7 +96,7 @@ export default function DrawingsView({
                   <td className="px-5 py-3">
                     {d.kind ? (
                       <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-500">
-                        {d.kind}
+                        {kindLabel(d.kind)}
                       </span>
                     ) : (
                       <span className="text-slate-300">-</span>
