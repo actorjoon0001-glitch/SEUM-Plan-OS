@@ -75,10 +75,25 @@ export function regionOf(c: Contract): string {
   return v ? String(v) : "-";
 }
 
-/** 전시장(쇼룸) 표시 */
+// 전시장 영문 코드 → 한글 표시
+const SHOWROOM_KO: Record<string, string> = {
+  headquarters: "본사",
+  head_office: "본사",
+  hq: "본사",
+  main: "본사",
+  bonsa: "본사",
+  ganghwa: "강화",
+  gimpo: "김포",
+  yangpyeong: "양평",
+  jecheon: "제천",
+};
+
+/** 전시장(쇼룸) 표시 — 영문 코드는 한글로 매핑, 모르는 값은 원문 유지 */
 export function showroomOf(c: Contract): string {
   const v = pick(c, ["showroom", "showroom_name", "showroom_id"]);
-  return v ? String(v) : "-";
+  if (!v) return "-";
+  const raw = String(v).trim();
+  return SHOWROOM_KO[raw.toLowerCase()] ?? raw;
 }
 
 export const TYPE_LABEL: Record<TypeKey, string> = {
