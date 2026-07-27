@@ -7,9 +7,12 @@ export interface MonthlyDatum {
   done: number;
 }
 
+const MAX_BAR_PX = 150;
+
 /**
  * 월별 계약 현황 막대그래프 (의존성 없는 CSS 바 차트).
  * 각 막대는 해당 월 계약 수이며, 설계완료(브랜드) / 진행중(주황)으로 나뉜다.
+ * 막대 높이는 픽셀로 직접 계산해 flex 안에서도 안정적으로 렌더된다.
  */
 export default function MonthlyChart({ data }: { data: MonthlyDatum[] }) {
   const max = Math.max(1, ...data.map((d) => d.total));
@@ -31,39 +34,35 @@ export default function MonthlyChart({ data }: { data: MonthlyDatum[] }) {
         }
       />
       <div className="px-5 pb-4 pt-5">
-        <div className="flex items-end gap-1.5 sm:gap-2" style={{ height: 180 }}>
+        <div className="flex items-end justify-between gap-1.5 sm:gap-2">
           {data.map((d, i) => {
-            const h = (d.total / max) * 100;
-            const donePct = d.total ? (d.done / d.total) * 100 : 0;
+            const barPx = d.total ? Math.max(6, Math.round((d.total / max) * MAX_BAR_PX)) : 0;
+            const donePx = d.total ? Math.round((d.done / d.total) * barPx) : 0;
+            const pendingPx = barPx - donePx;
             const isYearStart = i === 0 || d.month.endsWith("-01");
             return (
-              <div
-                key={d.month}
-                className="flex flex-1 flex-col items-center gap-1"
-              >
-                <span className="text-[11px] font-medium text-slate-500">
+              <div key={d.month} className="flex flex-1 flex-col items-center">
+                <span className="mb-1 text-[11px] font-medium text-slate-600">
                   {d.total || ""}
                 </span>
-                <div className="flex w-full flex-1 items-end justify-center">
+                <div
+                  className="flex w-5 flex-col overflow-hidden rounded-md bg-slate-50 sm:w-7"
+                  style={{ height: barPx }}
+                  title={`${d.month} · 총 ${d.total}건 (설계완료 ${d.done})`}
+                >
                   <div
-                    className="flex w-5 flex-col justify-end overflow-hidden rounded-md sm:w-7"
-                    style={{ height: `${d.total ? Math.max(h, 4) : 0}%` }}
-                    title={`${d.month} · 총 ${d.total}건 (설계완료 ${d.done})`}
-                  >
-                    <div
-                      className="w-full bg-amber-400"
-                      style={{ height: `${100 - donePct}%` }}
-                    />
-                    <div
-                      className="w-full bg-brand-500"
-                      style={{ height: `${donePct}%` }}
-                    />
-                  </div>
+                    className="w-full bg-amber-400"
+                    style={{ height: pendingPx }}
+                  />
+                  <div
+                    className="w-full bg-brand-500"
+                    style={{ height: donePx }}
+                  />
                 </div>
-                <span className="text-[10px] leading-none text-slate-400">
+                <span className="mt-1.5 text-[10px] leading-none text-slate-400">
                   {Number(d.month.slice(5))}월
                 </span>
-                <span className="h-3 text-[9px] leading-none text-slate-300">
+                <span className="mt-0.5 h-3 text-[9px] leading-none text-slate-300">
                   {isYearStart ? `'${d.month.slice(2, 4)}` : ""}
                 </span>
               </div>
