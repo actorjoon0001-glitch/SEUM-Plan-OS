@@ -37,8 +37,32 @@ export default async function DashboardPage() {
   const designPending = contracts.filter((c) => !isDesignDone(c));
   const urgent = contracts.filter((c) => c.is_urgent && !isDesignDone(c));
 
+  // 계약 파이프라인: 인허가로 넘어간 계약 = 인허가 서류가 등록된 계약
+  const permitContractIds = new Set(
+    submissions.map((s) => s.contract_local_id).filter(Boolean),
+  );
+  const permitCount = contracts.filter(
+    (c) => c.local_id && permitContractIds.has(c.local_id),
+  ).length;
+  // 진행 중 = 설계 미완료 & 아직 인허가로 안 넘어간 계약
+  const inProgressCount = contracts.filter(
+    (c) =>
+      !isDesignDone(c) &&
+      !(c.local_id && permitContractIds.has(c.local_id)),
+  ).length;
+
   const stats = [
-    { label: "수기 계약서", value: contracts.length, unit: "건", href: "/contracts", tone: "text-brand-600" },
+    {
+      label: "수기 계약서",
+      value: contracts.length,
+      unit: "건",
+      href: "/contracts",
+      tone: "text-brand-600",
+      sub: [
+        { label: "진행 중", value: inProgressCount, dot: "bg-blue-500" },
+        { label: "인허가 넘어감", value: permitCount, dot: "bg-emerald-500" },
+      ],
+    },
     { label: "전자계약서", value: econtracts.length, unit: "건", href: "/econtracts", tone: "text-violet-600" },
     { label: "등록 도면", value: drawings.length, unit: "개", href: "/drawings", tone: "text-indigo-600" },
     { label: "인허가 서류", value: submissions.length, unit: "건", href: "/permits", tone: "text-emerald-600" },
@@ -102,6 +126,20 @@ export default async function DashboardPage() {
                 <span className={`text-3xl font-bold ${s.tone}`}>{s.value}</span>
                 <span className="text-sm text-slate-400">{s.unit}</span>
               </p>
+              {"sub" in s && s.sub ? (
+                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-slate-100 pt-2.5">
+                  {s.sub.map((item) => (
+                    <span
+                      key={item.label}
+                      className="flex items-center gap-1.5 text-xs text-slate-500"
+                    >
+                      <span className={`h-2 w-2 rounded-full ${item.dot}`} />
+                      {item.label}{" "}
+                      <b className="font-semibold text-slate-700">{item.value}</b>
+                    </span>
+                  ))}
+                </div>
+              ) : null}
             </Card>
           </Link>
         ))}
