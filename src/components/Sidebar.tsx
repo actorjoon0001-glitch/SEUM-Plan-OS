@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { navSections } from "@/lib/navigation";
 import LogoutButton from "@/components/LogoutButton";
 
@@ -15,8 +15,21 @@ export default function Sidebar({
   userTeam?: string | null;
 }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentType = searchParams.get("type");
   const displayName = userName?.trim() || "세움 설계팀";
   const initial = displayName.charAt(0);
+
+  function isActive(href: string): boolean {
+    const [path, qs] = href.split("?");
+    const wantType = new URLSearchParams(qs).get("type");
+    if (path === "/") return pathname === "/";
+    if (path === "/priority") {
+      if (pathname !== "/priority") return false;
+      return wantType ? currentType === wantType : !currentType;
+    }
+    return pathname === path || pathname.startsWith(path + "/");
+  }
 
   return (
     <aside className="flex h-screen w-64 flex-col border-r border-slate-200 bg-white">
@@ -41,37 +54,44 @@ export default function Sidebar({
               </p>
             )}
             {section.items.map((item) => {
-              const active =
-                item.href === "/"
-                  ? pathname === "/"
-                  : pathname.startsWith(item.href);
+              const active = isActive(item.href);
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+                  className={`group flex items-center gap-3 rounded-lg py-2.5 text-sm transition-colors ${
+                    item.indent ? "pl-11 pr-3" : "px-3"
+                  } ${
                     active
                       ? "bg-brand-50 font-semibold text-brand-700"
                       : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                   }`}
                 >
-                  <svg
-                    className={`h-5 w-5 shrink-0 ${
-                      active
-                        ? "text-brand-600"
-                        : "text-slate-400 group-hover:text-slate-600"
-                    }`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.7}
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d={item.icon}
+                  {item.indent ? (
+                    <span
+                      className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                        active ? "bg-brand-500" : "bg-slate-300"
+                      }`}
                     />
-                  </svg>
+                  ) : (
+                    <svg
+                      className={`h-5 w-5 shrink-0 ${
+                        active
+                          ? "text-brand-600"
+                          : "text-slate-400 group-hover:text-slate-600"
+                      }`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.7}
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d={item.icon}
+                      />
+                    </svg>
+                  )}
                   {item.label}
                 </Link>
               );

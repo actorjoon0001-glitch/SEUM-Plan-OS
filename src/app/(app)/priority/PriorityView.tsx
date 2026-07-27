@@ -13,6 +13,7 @@ import {
   type TabKey,
   type TypeKey,
   TYPE_LABEL,
+  TYPE_NOTE,
   TYPE_BADGE,
   isPriorityDone,
   projectTypeKey,
@@ -23,12 +24,18 @@ import {
 
 const ALL = "전체";
 
-export default function PriorityView({ contracts }: { contracts: Contract[] }) {
+export default function PriorityView({
+  contracts,
+  initialTab = "all",
+}: {
+  contracts: Contract[];
+  initialTab?: TabKey;
+}) {
   const router = useRouter();
   const [year, setYear] = useState(ALL);
   const [month, setMonth] = useState(ALL);
   const [showroom, setShowroom] = useState(ALL);
-  const [tab, setTab] = useState<TabKey>("all");
+  const [tab, setTab] = useState<TabKey>(initialTab);
   const [search, setSearch] = useState("");
 
   // 필터 옵션
@@ -116,12 +123,19 @@ export default function PriorityView({ contracts }: { contracts: Contract[] }) {
     return sortPriority(rows, tab);
   }, [tab, active, done, search]);
 
-  const tabs: { key: TabKey; label: string; count: number; danger?: boolean; ok?: boolean }[] = [
+  const tabs: {
+    key: TabKey;
+    label: string;
+    note?: string;
+    count: number;
+    danger?: boolean;
+    ok?: boolean;
+  }[] = [
     { key: "all", label: "전체", count: counts.all },
     { key: "urgent", label: "🚨 긴급진행", count: counts.urgent, danger: true },
     { key: "container", label: TYPE_LABEL.container, count: counts.container },
-    { key: "stay", label: TYPE_LABEL.stay, count: counts.stay },
-    { key: "house", label: TYPE_LABEL.house, count: counts.house },
+    { key: "stay", label: TYPE_LABEL.stay, note: TYPE_NOTE.stay, count: counts.stay },
+    { key: "house", label: TYPE_LABEL.house, note: TYPE_NOTE.house, count: counts.house },
     { key: "etc", label: TYPE_LABEL.etc, count: counts.etc },
     { key: "done", label: "✅ 작업완료", count: counts.done, ok: true },
   ];
@@ -199,6 +213,15 @@ export default function PriorityView({ contracts }: { contracts: Contract[] }) {
                 }`}
               >
                 {t.label}
+                {t.note ? (
+                  <span
+                    className={`text-xs font-normal ${
+                      activeTab ? "text-white/80" : "text-slate-400"
+                    }`}
+                  >
+                    ({t.note})
+                  </span>
+                ) : null}
                 <span
                   className={`rounded-full px-1.5 text-xs ${
                     activeTab ? "bg-white/25" : "bg-white text-slate-500"
