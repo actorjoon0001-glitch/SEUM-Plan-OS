@@ -1,7 +1,7 @@
 import PageHeader from "@/components/PageHeader";
 import { ConnectionNotice } from "@/components/Notice";
 import { getContracts } from "@/lib/data";
-import { depositReceived, type TabKey } from "@/lib/priority";
+import { type TabKey } from "@/lib/priority";
 import PriorityView from "./PriorityView";
 
 export const dynamic = "force-dynamic";
@@ -26,14 +26,14 @@ export default async function PriorityPage({
     type && VALID_TABS.includes(type as TabKey) ? (type as TabKey) : "all";
 
   const res = await getContracts();
-  // 계약금 받은 건만 우선순위 큐에 표시
-  const queue = res.data.filter(depositReceived);
+  // 우선 전체 계약을 큐에 표시 (실제 계약금 컬럼 확인 후 '계약금 수령 건'만으로 재적용 예정)
+  const queue = res.data;
 
   return (
     <>
       <PageHeader
         title="우선순위"
-        description="건축허가 완료 후 설계 진행 우선순위 목록입니다. (계약금 수령 건 · 계약일 빠른 순)"
+        description="설계 진행 우선순위 목록입니다. (계약일 빠른 순)"
       />
       <ConnectionNotice configured={res.configured} error={res.error} />
       <PriorityView key={initialTab} contracts={queue} initialTab={initialTab} />
