@@ -27,11 +27,19 @@ const ALL = "전체";
 export default function PriorityView({
   contracts,
   initialTab = "all",
+  econtractRefs = [],
 }: {
   contracts: Contract[];
   initialTab?: TabKey;
+  econtractRefs?: string[];
 }) {
   const router = useRouter();
+  const econtractSet = useMemo(() => new Set(econtractRefs), [econtractRefs]);
+  const hasEcontract = (c: Contract) =>
+    Boolean(
+      (c.local_id && econtractSet.has(c.local_id)) ||
+        (c.customer_name && econtractSet.has(c.customer_name)),
+    );
   const [year, setYear] = useState(ALL);
   const [month, setMonth] = useState(ALL);
   const [showroom, setShowroom] = useState(ALL);
@@ -297,10 +305,17 @@ export default function PriorityView({
                         {formatDate(c.contract_date)}
                       </td>
                       <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${TYPE_BADGE[tk]}`}
-                        >
-                          {TYPE_LABEL[tk]}
+                        <span className="flex flex-wrap items-center gap-1">
+                          <span
+                            className={`inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${TYPE_BADGE[tk]}`}
+                          >
+                            {TYPE_LABEL[tk]}
+                          </span>
+                          {hasEcontract(c) && (
+                            <span className="inline-flex whitespace-nowrap items-center gap-0.5 rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 ring-1 ring-inset ring-violet-600/20">
+                              ⚡ 전자계약
+                            </span>
+                          )}
                         </span>
                       </td>
                       <td className="px-4 py-3 font-medium text-slate-800">
