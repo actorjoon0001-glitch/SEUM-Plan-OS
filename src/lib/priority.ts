@@ -63,9 +63,15 @@ export function projectTypeKey(c: Contract): TypeKey {
     "type",
   ]);
   const s = raw ? String(raw) : "";
-  if (/컨테이너|농막|container/i.test(s)) return "container";
-  if (/체류|쉼터|stay/i.test(s)) return "stay";
-  if (/전원|주택|인허가|house/i.test(s)) return "house";
+  // 1) project_type 값(한글)으로 분류
+  if (/컨테이너|농막/.test(s)) return "container";
+  if (/체류|쉼터/.test(s)) return "stay";
+  if (/전원|주택|인허가/.test(s)) return "house";
+  // 2) 모델명 패턴으로 분류 (STAY=주택, FOREST=체류형쉼터, CUBE=컨테이너)
+  const m = (c.model_name ?? "").toString().toUpperCase();
+  if (/CUBE|컨테이너|농막/.test(m)) return "container";
+  if (/FOREST/.test(m)) return "stay";
+  if (/STAY/.test(m)) return "house";
   return "etc";
 }
 
