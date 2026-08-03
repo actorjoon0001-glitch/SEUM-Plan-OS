@@ -304,16 +304,21 @@ export default function PriorityView({
                   const href = c.local_id
                     ? `/contracts/${encodeURIComponent(c.local_id)}`
                     : undefined;
+                  const eco = hasEcontract(c);
+                  // 전자계약 건은 텍스트를 초록으로 (수기=검정과 구분)
+                  const t = eco ? "text-emerald-700" : "text-slate-600";
+                  const tStrong = eco ? "text-emerald-800" : "text-slate-800";
+                  const tDim = eco ? "text-emerald-600" : "text-slate-400";
                   return (
                     <tr
                       key={c.id}
                       onClick={href ? () => router.push(href) : undefined}
                       className={`border-b border-slate-50 ${
                         href ? "cursor-pointer hover:bg-slate-50" : ""
-                      }`}
+                      } ${eco ? "bg-emerald-50/30" : ""}`}
                     >
-                      <td className="px-4 py-3 text-slate-400">{i + 1}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-slate-600">
+                      <td className={`px-4 py-3 ${tDim}`}>{i + 1}</td>
+                      <td className={`whitespace-nowrap px-4 py-3 ${t}`}>
                         {formatDate(c.contract_date)}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3">
@@ -330,7 +335,7 @@ export default function PriorityView({
                           )}
                         </span>
                       </td>
-                      <td className="px-4 py-3 font-medium text-slate-800">
+                      <td className={`px-4 py-3 font-medium ${tStrong}`}>
                         <span className="flex items-center gap-1.5">
                           {c.is_urgent && (
                             <span className="rounded bg-rose-100 px-1 text-[10px] font-bold text-rose-600">
@@ -340,11 +345,11 @@ export default function PriorityView({
                           {c.customer_name ?? "-"}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-slate-600">{c.model_name ?? "-"}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-slate-600">{showroomOf(c)}</td>
-                      <td className="px-4 py-3 text-slate-600">{regionOf(c)}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-slate-600">{c.sales_person ?? "-"}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-slate-600">{designOwner(c)}</td>
+                      <td className={`px-4 py-3 ${t}`}>{c.model_name ?? "-"}</td>
+                      <td className={`whitespace-nowrap px-4 py-3 ${t}`}>{showroomOf(c)}</td>
+                      <td className={`px-4 py-3 ${t}`}>{regionOf(c)}</td>
+                      <td className={`whitespace-nowrap px-4 py-3 ${t}`}>{c.sales_person ?? "-"}</td>
+                      <td className={`whitespace-nowrap px-4 py-3 ${t}`}>{designOwner(c)}</td>
                       <td className="px-4 py-3">
                         <StatusBadge status={designStatusLabel(c)} />
                       </td>
@@ -359,7 +364,7 @@ export default function PriorityView({
                           {c.design_confirmed ? "승인" : "미승인"}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-slate-400">{noteOf(c)}</td>
+                      <td className={`px-4 py-3 ${tDim}`}>{noteOf(c)}</td>
                       <td className="whitespace-nowrap px-4 py-3">
                         <span className="flex items-center gap-1.5">
                           {isPriorityDone(c) && (
