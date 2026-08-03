@@ -9,7 +9,6 @@ import {
   getDrawings,
   getSubmissions,
   getSitePhotos,
-  getMessages,
   getPayments,
   getEContractsForContract,
 } from "@/lib/data";
@@ -18,12 +17,7 @@ import {
   designOwner,
   designStatusLabel,
 } from "@/lib/contract";
-import {
-  formatDate,
-  formatDateTime,
-  formatMoney,
-  formatFileSize,
-} from "@/lib/format";
+import { formatDate, formatMoney, formatFileSize } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -35,13 +29,12 @@ export default async function ContractDetailPage({
   const { localId } = await params;
   const id = decodeURIComponent(localId);
 
-  const [contractRes, drawingsRes, submissionsRes, photosRes, messagesRes] =
+  const [contractRes, drawingsRes, submissionsRes, photosRes] =
     await Promise.all([
       getContract(id),
       getDrawings(id),
       getSubmissions(id),
       getSitePhotos(id),
-      getMessages(id),
     ]);
 
   const c = contractRes.data;
@@ -80,7 +73,6 @@ export default async function ContractDetailPage({
   const drawings = drawingsRes.data;
   const submissions = submissionsRes.data;
   const photos = photosRes.data;
-  const messages = messagesRes.data;
   const payments = paymentsRes.data;
 
   // 영업팀이 계약목록에 입력한 원본 데이터 (값이 있는 필드만) — 어느 필드에 무엇이 있는지 그대로 표시
@@ -278,38 +270,6 @@ export default async function ContractDetailPage({
         ))}
       </SectionCard>
 
-      {/* 협의 · 소통 */}
-      <Card className="mt-6">
-        <CardHeader title={`협의 · 소통 (${messages.length})`} />
-        {messages.length === 0 ? (
-          <p className="px-5 py-6 text-center text-sm text-slate-400">
-            소통 메시지가 없습니다.
-          </p>
-        ) : (
-          <div className="divide-y divide-slate-100">
-            {messages.slice(0, 30).map((m) => (
-              <div key={m.id} className="px-5 py-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-slate-700">
-                    {m.sender_name ?? "알 수 없음"}
-                  </span>
-                  {m.is_pinned && (
-                    <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
-                      고정
-                    </span>
-                  )}
-                  <span className="text-[11px] text-slate-400">
-                    {formatDateTime(m.created_at)}
-                  </span>
-                </div>
-                <p className="mt-0.5 whitespace-pre-wrap text-sm text-slate-600">
-                  {m.message}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
     </>
   );
 }
