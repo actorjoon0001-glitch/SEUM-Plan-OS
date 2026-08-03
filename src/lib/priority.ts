@@ -75,10 +75,33 @@ export function projectTypeKey(c: Contract): TypeKey {
   return "etc";
 }
 
-/** 지역 표시 (여러 후보 컬럼 대응) */
+/** 주소에서 지역(앞 2어절)만 추출 — "인천광역시 강화도 화전면 …" → "인천광역시 강화도" */
+function shortRegion(addr: string): string {
+  const parts = addr.trim().split(/\s+/);
+  return parts.length >= 2 ? `${parts[0]} ${parts[1]}` : addr.trim();
+}
+
+/** 지역 표시 — 계약 컬럼 → payload(지역/시공주소) 순으로 탐색 */
 export function regionOf(c: Contract): string {
-  const v = pick(c, ["region", "site_region", "area", "site_address", "address"]);
-  return v ? String(v) : "-";
+  // 1) 계약 컬럼의 지역
+  const direct = pick(c, ["region", "site_region", "area"]);
+  if (direct) return String(direct);
+
+  // 2) payload 내부의 지역/시공주소
+  const p = c.payload;
+  if (p && typeof p === "object" && !Array.isArray(p)) {
+    const rec = p as Record<string, unknown>;
+    const pr =
+      rec.region ?? rec.siteRegion ?? rec.area ?? rec.district ?? rec.addressRegion;
+    if (pr) return String(pr);
+    const addr = rec.siteAddress ?? rec.address;
+    if (addr) return shortRegion(String(addr));
+  }
+
+  // 3) 계약 컬럼의 주소에서 추출
+  const addr = pick(c, ["site_address", "address"]);
+  if (addr) return shortRegion(String(addr));
+  return "-";
 }
 
 // 전시장 영문 코드 → 한글 표시
