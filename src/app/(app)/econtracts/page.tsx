@@ -26,15 +26,53 @@ export default async function EContractsPage() {
     types[e.id] = c ? projectTypeKey(c) : "etc";
   }
 
+  const listUrl = "https://seum-contract-os.netlify.app/#/";
+
   return (
     <>
       <CurrentUserBadge />
       <PageHeader
         title="전자계약서"
-        description="세움os에 등록된 전자계약서입니다. 년·월·전시장·유형·상태로 필터할 수 있습니다."
+        description="세움 전산 계약서(Contract-OS) 원본 목록입니다."
       />
       <ConnectionNotice configured={res.configured} error={res.error} />
-      <EContractsView econtracts={res.data} types={types} />
+
+      {/* 원본 전산 계약서 목록 임베드 */}
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <p className="text-sm font-semibold text-slate-800">
+          전산 계약서 목록
+        </p>
+        <a
+          href={listUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-brand-700"
+        >
+          📄 새 탭에서 열기
+        </a>
+      </div>
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <iframe
+          src={listUrl}
+          title="전산 계약서 목록"
+          className="w-full"
+          style={{ height: 1600, border: "none" }}
+          loading="lazy"
+        />
+      </div>
+      <p className="mt-2 text-xs text-slate-400">
+        원본이 안 보이면(로그인 필요 등) 위 “새 탭에서 열기” 를 눌러 확인하세요.
+      </p>
+
+      {/* 간략 목록 (예비) */}
+      <details className="mt-6">
+        <summary className="cursor-pointer text-sm font-medium text-slate-500">
+          간략 목록 보기 (필터·유형 탭)
+        </summary>
+        <div className="mt-3">
+          <EContractsView econtracts={res.data} types={types} />
+        </div>
+      </details>
     </>
   );
 }
