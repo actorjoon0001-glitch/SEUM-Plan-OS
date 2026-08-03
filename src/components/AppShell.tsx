@@ -22,9 +22,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [employee, setEmployee] = useState<Employee | null>(null);
 
-  // 넓은 표가 있는 페이지는 전체 폭 사용 (수기 계약서 · 우선순위)
+  // 넓은 표/임베드가 있는 페이지는 전체 폭 사용 (수기 계약서 · 우선순위 · 전자계약서)
   const fullWidth =
-    pathname.startsWith("/contracts") || pathname.startsWith("/priority");
+    pathname.startsWith("/contracts") ||
+    pathname.startsWith("/priority") ||
+    pathname.startsWith("/econtracts");
 
   useEffect(() => {
     if (!isSupabaseConfigured) {

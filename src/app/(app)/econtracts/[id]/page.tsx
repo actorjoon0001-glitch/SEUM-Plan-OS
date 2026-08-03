@@ -82,7 +82,7 @@ export default async function EContractDetailPage({
           src={originUrl}
           title="전자계약서 원본"
           className="w-full"
-          style={{ height: 1500, border: "none" }}
+          style={{ height: "calc(100vh - 14rem)", minHeight: 700, border: "none" }}
           loading="lazy"
         />
       </Card>

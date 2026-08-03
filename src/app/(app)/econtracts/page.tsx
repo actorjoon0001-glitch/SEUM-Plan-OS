@@ -56,7 +56,7 @@ export default async function EContractsPage() {
           src={listUrl}
           title="전산 계약서 목록"
           className="w-full"
-          style={{ height: 1600, border: "none" }}
+          style={{ height: "calc(100vh - 12rem)", minHeight: 700, border: "none" }}
           loading="lazy"
         />
       </div>
