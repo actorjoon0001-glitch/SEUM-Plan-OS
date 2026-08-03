@@ -40,6 +40,9 @@ export default async function EContractDetailPage({
     );
   }
 
+  // 원본 전자계약서(세움 전산 계약서) 주소 — 같은 econtracts.id 사용
+  const originUrl = `https://seum-contract-os.netlify.app/#/edit/${e.id}`;
+
   return (
     <>
       <CurrentUserBadge />
@@ -62,7 +65,38 @@ export default async function EContractDetailPage({
         </div>
       </Card>
 
-      <EContractDoc data={e.data} />
+      {/* 원본 전자계약서 (세움 전산 계약서) */}
+      <div className="mt-6 flex items-center justify-between gap-3">
+        <p className="text-sm font-semibold text-slate-800">원본 전자계약서</p>
+        <a
+          href={originUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-brand-700"
+        >
+          📄 새 탭에서 열기
+        </a>
+      </div>
+      <Card className="mt-2 overflow-hidden p-0">
+        <iframe
+          src={originUrl}
+          title="전자계약서 원본"
+          className="w-full"
+          style={{ height: 1500, border: "none" }}
+          loading="lazy"
+        />
+      </Card>
+      <p className="mt-2 text-xs text-slate-400">
+        원본이 안 보이면(로그인 필요 등) 위 “새 탭에서 열기” 를 눌러 세움 계약서에서 확인하세요.
+      </p>
+
+      {/* 간략 내용 (예비) */}
+      <details className="mt-6">
+        <summary className="cursor-pointer text-sm font-medium text-slate-500">
+          간략 내용 보기
+        </summary>
+        <EContractDoc data={e.data} />
+      </details>
     </>
   );
 }
