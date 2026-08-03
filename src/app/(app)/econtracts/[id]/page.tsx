@@ -1,11 +1,12 @@
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
-import { Card, CardHeader } from "@/components/Card";
+import { Card } from "@/components/Card";
 import Notice, { ConnectionNotice } from "@/components/Notice";
-import JsonView from "@/components/JsonView";
+import EContractDoc from "@/components/EContractDoc";
 import CurrentUserBadge from "@/components/CurrentUserBadge";
 import { getEContract } from "@/lib/data";
+import { koShowroom } from "@/lib/priority";
 import { formatDate, formatMoney } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -54,19 +55,14 @@ export default async function EContractDetailPage({
           <Field label="계약번호" value={e.contract_no ?? "-"} />
           <Field label="고객명" value={e.client_name ?? "-"} />
           <Field label="담당자" value={e.salesperson ?? "-"} />
-          <Field label="쇼룸" value={e.showroom ?? "-"} />
+          <Field label="전시장" value={koShowroom(e.showroom)} />
           <Field label="계약일" value={formatDate(e.contract_date)} />
           <Field label="계약 금액" value={formatMoney(e.total_amount)} />
           <Field label="현장 주소" value={e.site_address ?? "-"} full />
         </div>
       </Card>
 
-      <Card className="mt-6">
-        <CardHeader title="계약서 상세 내용" />
-        <div className="px-5 py-4">
-          <JsonView data={e.data} />
-        </div>
-      </Card>
+      <EContractDoc data={e.data} />
     </>
   );
 }
