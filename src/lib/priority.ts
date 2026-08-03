@@ -125,17 +125,21 @@ const SHOWROOM_KO: Record<string, string> = {
   jecheon: "제천",
 };
 
-/** 전시장(쇼룸) 표시 — 영문 코드는 한글로 매핑, 모르는 값은 원문 유지 */
-export function showroomOf(c: Contract): string {
-  const v = pick(c, ["showroom", "showroom_name", "showroom_id"]);
-  if (!v) return "-";
+/** 전시장 코드(문자열/값) → 한글. 모르는 값은 원문 유지 */
+export function koShowroom(v: unknown): string {
+  if (v === null || v === undefined || v === "") return "-";
   const raw = String(v).trim();
+  if (!raw) return "-";
   const key = raw.toLowerCase();
   if (SHOWROOM_KO[key]) return SHOWROOM_KO[key];
-  // showroom1 → 1전시장, showroom3 → 3전시장 …
-  const m = key.match(/^showroom\s*_?(\d+)$/);
+  const m = key.match(/^showroom\s*_?(\d+)$/); // showroom1 → 1전시장
   if (m) return `${m[1]}전시장`;
   return raw;
+}
+
+/** 전시장(쇼룸) 표시 — 계약 컬럼에서 읽어 한글화 */
+export function showroomOf(c: Contract): string {
+  return koShowroom(pick(c, ["showroom", "showroom_name", "showroom_id"]));
 }
 
 export const TYPE_LABEL: Record<TypeKey, string> = {
