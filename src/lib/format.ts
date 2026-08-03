@@ -36,6 +36,16 @@ export function formatMoney(
   return `${parts.join(" ")}원`;
 }
 
+/** 만원 단위로 저장된 금액을 'N만원' 으로 (세움os 계약 금액 단위) */
+export function formatManwon(
+  value: number | string | null | undefined,
+): string {
+  if (value === null || value === undefined || value === "") return "-";
+  const n = typeof value === "string" ? Number(value.replace(/[^0-9.-]/g, "")) : value;
+  if (!Number.isFinite(n) || n === 0) return "-";
+  return `${n.toLocaleString()}만원`;
+}
+
 /** 파일명에서 확장자 추출 (소문자) */
 export function fileExt(name: string | null | undefined): string {
   if (!name) return "";
