@@ -316,8 +316,8 @@ export default function PriorityView({
                       <td className="whitespace-nowrap px-4 py-3 text-slate-600">
                         {formatDate(c.contract_date)}
                       </td>
-                      <td className="px-4 py-3">
-                        <span className="flex flex-wrap items-center gap-1">
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <span className="inline-flex items-center gap-1">
                           <span
                             className={`inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${TYPE_BADGE[tk]}`}
                           >
