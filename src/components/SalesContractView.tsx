@@ -29,6 +29,9 @@ const LABELS: Record<string, string> = {
   totalAmount: "총 금액(만원)",
   depositAmount: "계약금(만원)",
   balanceAmount: "잔금(만원)",
+  progress1Amount: "1차 중도금(만원)",
+  progress2Amount: "2차 중도금(만원)",
+  progress3Amount: "3차 중도금(만원)",
   basePyeong: "기초공사 평수",
   baseConstructionPyeong: "기초공사 평수",
   foundationPyeong: "기초공사 평수",
@@ -104,6 +107,7 @@ const LABELS: Record<string, string> = {
   depositConfirmed: "계약금 확인",
   depositReceivedAt: "계약금 수령일",
   finalApproved: "최종 승인",
+  progress1Confirmed: "1차 진행 확인",
   progress2Confirmed: "2차 진행 확인",
   progress3Confirmed: "3차 진행 확인",
   // 인허가
@@ -111,7 +115,9 @@ const LABELS: Record<string, string> = {
   permitInProgress: "인허가 진행중",
   hasPermitCert: "건축허가 필증",
   hasCompletionCert: "준공 필증",
+  hasConstructionStartReport: "착공 신고서",
   // 첨부
+  contractAttachment: "첨부 계약서(수기)",
   attachments: "첨부 파일",
   files: "첨부 파일",
   contractFile: "계약서 첨부",
@@ -201,9 +207,9 @@ function Val({ value }: { value: unknown }) {
           href={value}
           target="_blank"
           rel="noopener noreferrer"
-          className="break-all text-brand-600 hover:underline"
+          className="inline-flex items-center gap-1 text-brand-600 hover:underline"
         >
-          {value}
+          📎 파일 열기
         </a>
       );
     }
