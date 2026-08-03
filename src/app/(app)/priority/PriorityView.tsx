@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/Card";
 import StatusBadge from "@/components/StatusBadge";
-import { contractTitle, designStatusLabel } from "@/lib/contract";
+import { designOwner, designStatusLabel } from "@/lib/contract";
 import { formatDate } from "@/lib/format";
 import {
   type Contract,
@@ -23,6 +23,13 @@ import {
 } from "@/lib/priority";
 
 const ALL = "전체";
+
+/** 비고 (여러 후보 컬럼 대응, 없으면 -) */
+function noteOf(c: Contract): string {
+  const rec = c as unknown as Record<string, unknown>;
+  const v = rec.note ?? rec.remark ?? rec.bigo ?? rec.priority_note;
+  return v ? String(v) : "-";
+}
 
 export default function PriorityView({
   contracts,
@@ -276,13 +283,18 @@ export default function PriorityView({
                 <th className="px-4 py-3 font-medium">모델명</th>
                 <th className="px-4 py-3 font-medium">전시장</th>
                 <th className="px-4 py-3 font-medium">지역</th>
-                <th className="px-4 py-3 font-medium">설계상태</th>
+                <th className="px-4 py-3 font-medium">담당 영업사원</th>
+                <th className="px-4 py-3 font-medium">설계담당</th>
+                <th className="px-4 py-3 font-medium">설계진행 상태</th>
+                <th className="px-4 py-3 font-medium">검토자 승인</th>
+                <th className="px-4 py-3 font-medium">비고</th>
+                <th className="px-4 py-3 font-medium">액션</th>
               </tr>
             </thead>
             <tbody>
               {list.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-slate-400">
+                  <td colSpan={13} className="px-4 py-10 text-center text-slate-400">
                     해당하는 계약이 없습니다.
                   </td>
                 </tr>
@@ -329,10 +341,45 @@ export default function PriorityView({
                         </span>
                       </td>
                       <td className="px-4 py-3 text-slate-600">{c.model_name ?? "-"}</td>
-                      <td className="px-4 py-3 text-slate-600">{showroomOf(c)}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-slate-600">{showroomOf(c)}</td>
                       <td className="px-4 py-3 text-slate-600">{regionOf(c)}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-slate-600">{c.sales_person ?? "-"}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-slate-600">{designOwner(c)}</td>
                       <td className="px-4 py-3">
                         <StatusBadge status={designStatusLabel(c)} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${
+                            c.design_confirmed
+                              ? "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20"
+                              : "bg-slate-100 text-slate-500"
+                          }`}
+                        >
+                          {c.design_confirmed ? "승인" : "미승인"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-slate-400">{noteOf(c)}</td>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <span className="flex items-center gap-1.5">
+                          {isPriorityDone(c) && (
+                            <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-medium text-white">
+                              작업완료
+                            </span>
+                          )}
+                          {href && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(href);
+                              }}
+                              className="rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                            >
+                              계약 상세
+                            </button>
+                          )}
+                        </span>
                       </td>
                     </tr>
                   );
