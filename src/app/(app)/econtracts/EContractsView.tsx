@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Card } from "@/components/Card";
 import StatusBadge from "@/components/StatusBadge";
 import type { EContract } from "@/types";
@@ -23,6 +23,7 @@ export default function EContractsView({
   econtracts: EContract[];
   types: Record<number, TypeKey>;
 }) {
+  const router = useRouter();
   const [year, setYear] = useState(ALL);
   const [month, setMonth] = useState(ALL);
   const [showroom, setShowroom] = useState(ALL);
@@ -201,14 +202,13 @@ export default function EContractsView({
               {list.map((e) => {
                 const tk = typeOf(e);
                 return (
-                  <tr key={e.id} className="hover:bg-slate-50">
-                    <td className="whitespace-nowrap px-5 py-3">
-                      <Link
-                        href={`/econtracts/${e.id}`}
-                        className="font-medium text-slate-800 hover:text-brand-600"
-                      >
-                        {e.contract_no || `#${e.id}`}
-                      </Link>
+                  <tr
+                    key={e.id}
+                    onClick={() => router.push(`/econtracts/${e.id}`)}
+                    className="cursor-pointer hover:bg-slate-50"
+                  >
+                    <td className="whitespace-nowrap px-5 py-3 font-medium text-slate-800">
+                      {e.contract_no || `#${e.id}`}
                     </td>
                     <td className="px-5 py-3 text-slate-600">{e.client_name ?? "-"}</td>
                     <td className="px-5 py-3">
