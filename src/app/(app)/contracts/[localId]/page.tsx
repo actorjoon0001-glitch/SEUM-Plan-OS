@@ -2,7 +2,7 @@ import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
 import { Card, CardHeader } from "@/components/Card";
-import JsonView from "@/components/JsonView";
+import SalesContractView from "@/components/SalesContractView";
 import Notice, { ConnectionNotice } from "@/components/Notice";
 import {
   getContract,
@@ -17,7 +17,7 @@ import {
   designOwner,
   designStatusLabel,
 } from "@/lib/contract";
-import { formatDate, formatMoney, formatFileSize } from "@/lib/format";
+import { formatDate, formatMoney, formatManwon, formatFileSize } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -75,12 +75,6 @@ export default async function ContractDetailPage({
   const photos = photosRes.data;
   const payments = paymentsRes.data;
 
-  // 영업팀이 계약목록에 입력한 원본 데이터 (값이 있는 필드만) — 어느 필드에 무엇이 있는지 그대로 표시
-  const salesData = Object.fromEntries(
-    Object.entries(c as Record<string, unknown>).filter(
-      ([, v]) => v !== null && v !== undefined && v !== "",
-    ),
-  );
 
   const checklist: [string, boolean | null][] = [
     ["영업 확인", c.sales_confirmed],
@@ -109,9 +103,9 @@ export default async function ContractDetailPage({
             <Field label="모델명" value={c.model_name ?? "-"} />
             <Field label="쇼룸" value={c.showroom_id ?? "-"} />
             <Field label="계약 상태" value={c.status ?? "-"} />
-            <Field label="계약금액" value={formatMoney(c.contract_amount)} />
-            <Field label="계약금" value={formatMoney(c.deposit)} />
-            <Field label="잔금" value={formatMoney(c.balance)} />
+            <Field label="계약금액" value={formatManwon(c.contract_amount)} />
+            <Field label="계약금" value={formatManwon(c.deposit)} />
+            <Field label="잔금" value={formatManwon(c.balance)} />
           </div>
 
           {/* 진행 체크리스트 */}
@@ -171,7 +165,7 @@ export default async function ContractDetailPage({
           }
         />
         <div className="px-5 py-4">
-          <JsonView data={salesData} />
+          <SalesContractView payload={c.payload} />
         </div>
       </Card>
 

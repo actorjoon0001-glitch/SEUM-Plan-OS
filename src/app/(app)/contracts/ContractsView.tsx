@@ -6,7 +6,7 @@ import StatusBadge from "@/components/StatusBadge";
 import { Card } from "@/components/Card";
 import type { Contract } from "@/types";
 import { contractTitle, designStatusLabel } from "@/lib/contract";
-import { formatDate, formatMoney } from "@/lib/format";
+import { formatDate, formatManwon } from "@/lib/format";
 import {
   type TypeKey,
   TYPE_LABEL,
@@ -232,10 +232,10 @@ export default function ContractsView({
                       <td className="whitespace-nowrap px-4 py-3 text-slate-700">{c.customer_name ?? "-"}</td>
                       <td className="px-4 py-3 text-slate-600">{regionOf(c)}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-slate-600">{c.sales_person ?? "-"}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-right text-slate-700">{formatMoney(c.contract_amount)}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-right text-slate-500">{formatMoney(c.deposit)}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-right text-slate-500">{formatMoney(c.middle_payment)}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-right text-slate-500">{formatMoney(c.balance)}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-right text-slate-700">{formatManwon(c.contract_amount)}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-right text-slate-500">{formatManwon(c.deposit)}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-right text-slate-500">{formatManwon(c.middle_payment)}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-right text-slate-500">{formatManwon(c.balance)}</td>
                       <td className="px-4 py-3"><StatusBadge status={designStatusLabel(c)} /></td>
                     </tr>
                   );
