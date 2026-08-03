@@ -2,6 +2,7 @@ import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
 import { Card, CardHeader } from "@/components/Card";
+import JsonView from "@/components/JsonView";
 import Notice, { ConnectionNotice } from "@/components/Notice";
 import {
   getContract,
@@ -82,6 +83,13 @@ export default async function ContractDetailPage({
   const messages = messagesRes.data;
   const payments = paymentsRes.data;
 
+  // 영업팀이 계약목록에 입력한 원본 데이터 (값이 있는 필드만) — 어느 필드에 무엇이 있는지 그대로 표시
+  const salesData = Object.fromEntries(
+    Object.entries(c as Record<string, unknown>).filter(
+      ([, v]) => v !== null && v !== undefined && v !== "",
+    ),
+  );
+
   const checklist: [string, boolean | null][] = [
     ["영업 확인", c.sales_confirmed],
     ["설계 확인", c.design_confirmed],
@@ -161,6 +169,19 @@ export default async function ContractDetailPage({
           )}
         </Card>
       </div>
+
+      {/* 영업팀 작성 계약 상세 (원본 데이터) */}
+      <Card className="mt-6">
+        <CardHeader
+          title="영업팀 작성 계약 상세"
+          action={
+            <span className="text-xs text-slate-400">세움os 계약목록 입력 내용</span>
+          }
+        />
+        <div className="px-5 py-4">
+          <JsonView data={salesData} />
+        </div>
+      </Card>
 
       {/* 전자계약서 */}
       <Card className="mt-6">
