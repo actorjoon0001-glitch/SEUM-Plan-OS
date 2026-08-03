@@ -10,11 +10,19 @@ import type { Contract } from "@/types";
 export type TypeKey = "container" | "stay" | "house" | "etc";
 export type TabKey = "all" | "urgent" | TypeKey | "done";
 
-/** 여러 후보 컬럼명에서 첫 유효값을 읽는다 (실제 DB 컬럼명이 달라도 대응) */
+/** 여러 후보 키에서 첫 유효값을 읽는다. 계약 컬럼 → payload(jsonb) 순으로 탐색 */
 function pick(c: Contract, keys: string[]): unknown {
+  const payload =
+    c.payload && typeof c.payload === "object" && !Array.isArray(c.payload)
+      ? (c.payload as Record<string, unknown>)
+      : null;
   for (const k of keys) {
     const v = c[k];
     if (v !== undefined && v !== null && v !== "") return v;
+    if (payload) {
+      const pv = payload[k];
+      if (pv !== undefined && pv !== null && pv !== "") return pv;
+    }
   }
   return null;
 }
@@ -29,7 +37,7 @@ export function depositReceived(c: Contract): boolean {
     "deposit_date",
   ]);
   if (at) return true;
-  const amt = pick(c, ["deposit"]);
+  const amt = pick(c, ["deposit", "depositAmount"]);
   const n =
     typeof amt === "string" ? Number(amt.replace(/[^0-9.-]/g, "")) : Number(amt);
   return Number.isFinite(n) && n > 0;
