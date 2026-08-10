@@ -27,7 +27,7 @@ function pick(c: Contract, keys: string[]): unknown {
   return null;
 }
 
-/** 계약금 수령 여부 (deposit_received_at 우선, 없으면 deposit 금액 > 0) */
+/** 계약금 수령 여부 — 세움os 기준: 계약금 수령일(depositReceivedAt)이 있는 건만 */
 export function depositReceived(c: Contract): boolean {
   const at = pick(c, [
     "deposit_received_at",
@@ -36,11 +36,7 @@ export function depositReceived(c: Contract): boolean {
     "deposit_at",
     "deposit_date",
   ]);
-  if (at) return true;
-  const amt = pick(c, ["deposit", "depositAmount"]);
-  const n =
-    typeof amt === "string" ? Number(amt.replace(/[^0-9.-]/g, "")) : Number(amt);
-  return Number.isFinite(n) && n > 0;
+  return Boolean(at);
 }
 
 /** 건축허가 완료일 (전원주택 정렬용) */
