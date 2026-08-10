@@ -115,6 +115,26 @@ export function getSubmissions(contractLocalId?: string) {
   });
 }
 
+/** 협력사(건축사)별 제출 자료 — 건축사마다 테이블이 분리되어 있음 */
+export function getPartnerSubmissions(table: string) {
+  return run<HaeyoungSubmission[]>([], async () => {
+    const sb = await createClient();
+    const { data, error } = await sb
+      .from(table)
+      .select("*")
+      .order("uploaded_at", { ascending: false, nullsFirst: false })
+      .limit(1000);
+    if (error) {
+      // 아직 만들어지지 않은 테이블이면 오류 대신 빈 목록으로 처리
+      if (/does not exist|could not find|relation|schema cache/i.test(error.message)) {
+        return [];
+      }
+      throw new Error(error.message);
+    }
+    return notDeleted((data ?? []) as HaeyoungSubmission[]);
+  });
+}
+
 // ─────────────────────────────────────────────────────────────
 // 협의 · 소통
 // ─────────────────────────────────────────────────────────────
