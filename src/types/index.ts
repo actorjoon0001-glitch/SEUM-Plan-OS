@@ -76,6 +76,8 @@ export interface HaeyoungSubmission {
   uploaded_by_name: string | null;
   uploaded_at: string | null;
   design_manager: string | null;
+  /** 설계팀 담당자 (자료 확인·작업한 사람) — 설계OS 에서 입력 */
+  assignee?: string | null;
   is_deleted: boolean | null;
 }
 
