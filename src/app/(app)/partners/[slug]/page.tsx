@@ -4,6 +4,7 @@ import PageHeader from "@/components/PageHeader";
 import { Card } from "@/components/Card";
 import { ConnectionNotice } from "@/components/Notice";
 import { getPartnerSubmissions } from "@/lib/data";
+import AssigneeCell from "@/components/AssigneeCell";
 import { formatDate, formatFileSize } from "@/lib/format";
 import { FIRMS, FIRM_TABLE, isFirmSlug } from "@/lib/partners";
 
@@ -35,9 +36,10 @@ export default async function PartnerPage({
               <tr className="border-b border-slate-100 text-left text-xs text-slate-400">
                 <th className="px-5 py-3 font-medium">제목 / 파일</th>
                 <th className="px-5 py-3 font-medium">계약</th>
-                <th className="px-5 py-3 font-medium">담당</th>
+                <th className="px-5 py-3 font-medium">업로드(협력사)</th>
+                <th className="px-5 py-3 font-medium">설계 담당자</th>
                 <th className="px-5 py-3 font-medium">크기</th>
-                <th className="px-5 py-3 font-medium">업로드</th>
+                <th className="px-5 py-3 font-medium">업로드일</th>
                 <th className="px-5 py-3 font-medium"></th>
               </tr>
             </thead>
@@ -67,6 +69,13 @@ export default async function PartnerPage({
                   <td className="px-5 py-3 text-slate-600">
                     {s.design_manager ?? s.uploaded_by_name ?? "-"}
                   </td>
+                  <td className="px-5 py-3">
+                    <AssigneeCell
+                      table={FIRM_TABLE[slug]}
+                      id={s.id}
+                      initial={s.assignee ?? ""}
+                    />
+                  </td>
                   <td className="px-5 py-3 text-slate-500">
                     {formatFileSize(s.file_size)}
                   </td>
@@ -89,7 +98,7 @@ export default async function PartnerPage({
               ))}
               {items.length === 0 && !res.error && (
                 <tr>
-                  <td colSpan={6} className="px-5 py-10 text-center text-sm text-slate-400">
+                  <td colSpan={7} className="px-5 py-10 text-center text-sm text-slate-400">
                     {firm.name}가 올린 자료가 아직 없습니다.
                   </td>
                 </tr>
