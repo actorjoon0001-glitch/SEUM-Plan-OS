@@ -3,9 +3,9 @@ import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import { Card } from "@/components/Card";
 import { ConnectionNotice } from "@/components/Notice";
-import { getSubmissions } from "@/lib/data";
+import { getPartnerSubmissions } from "@/lib/data";
 import { formatDate, formatFileSize } from "@/lib/format";
-import { FIRMS, isFirmSlug, submissionFirm } from "@/lib/partners";
+import { FIRMS, FIRM_TABLE, isFirmSlug } from "@/lib/partners";
 
 export const dynamic = "force-dynamic";
 
@@ -18,50 +18,13 @@ export default async function PartnerPage({
   if (!isFirmSlug(slug)) notFound();
   const firm = FIRMS[slug];
 
-  const res = await getSubmissions();
-  const items = res.data.filter((s) => submissionFirm(s) === slug);
-
-  // 🔧 임시 진단: 전체 제출자료의 담당자/업로더 값 분포 (협력사 분류 기준 파악용)
-  const byManager = new Map<string, number>();
-  const byUploader = new Map<string, number>();
-  for (const s of res.data) {
-    const m = (s.design_manager ?? "").trim() || "(없음)";
-    byManager.set(m, (byManager.get(m) ?? 0) + 1);
-    const u = (s.uploaded_by_name ?? "").trim() || "(없음)";
-    byUploader.set(u, (byUploader.get(u) ?? 0) + 1);
-  }
-  const sortDesc = (map: Map<string, number>) =>
-    [...map.entries()].sort((a, b) => b[1] - a[1]);
+  const res = await getPartnerSubmissions(FIRM_TABLE[slug]);
+  const items = res.data;
 
   return (
     <>
       <PageHeader title={firm.name} description={firm.desc} />
       <ConnectionNotice configured={res.configured} error={res.error} />
-
-      {/* 🔧 임시 진단 (협력사 분류 기준 확인 후 제거 예정) */}
-      <details className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-xs text-slate-600">
-        <summary className="cursor-pointer font-medium text-amber-700">
-          🔧 데이터 진단 (임시) — 펼쳐서 스크린샷 보내주세요 (전체 제출자료 {res.data.length}건)
-        </summary>
-        <div className="mt-2 grid gap-4 sm:grid-cols-2">
-          <div>
-            <p className="mb-1 font-semibold text-slate-500">담당(design_manager) 값 분포</p>
-            <div className="space-y-0.5 font-mono text-[11px]">
-              {sortDesc(byManager).map(([k, n]) => (
-                <div key={k}>{k} · {n}건</div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <p className="mb-1 font-semibold text-slate-500">업로더(uploaded_by_name) 값 분포</p>
-            <div className="space-y-0.5 font-mono text-[11px]">
-              {sortDesc(byUploader).map(([k, n]) => (
-                <div key={k}>{k} · {n}건</div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </details>
 
       <p className="mb-2 text-xs text-slate-400">{items.length}건</p>
 

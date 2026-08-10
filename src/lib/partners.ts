@@ -26,6 +26,13 @@ export function isFirmSlug(slug: string): slug is FirmSlug {
   return slug === "haeyoung" || slug === "pil" || slug === "civil";
 }
 
+/** 협력사별 제출 자료 테이블 (건축사마다 분리) */
+export const FIRM_TABLE: Record<FirmSlug, string> = {
+  haeyoung: "haeyoung_submissions",
+  pil: "pil_submissions",
+  civil: "civil_submissions",
+};
+
 /** 제출 자료가 어느 협력사 것인지 추정 */
 export function submissionFirm(s: HaeyoungSubmission): FirmSlug {
   const hay = [s.design_manager, s.uploaded_by_name, s.file_path]
