@@ -35,10 +35,13 @@ export default function PriorityView({
   contracts,
   initialTab = "all",
   econtractRefs = [],
+  reviewMode = false,
 }: {
   contracts: Contract[];
   initialTab?: TabKey;
   econtractRefs?: string[];
+  /** 검토자 우선순위 모드: 작업완료 목록만, 유형 탭 숨김 */
+  reviewMode?: boolean;
 }) {
   const router = useRouter();
   const econtractSet = useMemo(() => new Set(econtractRefs), [econtractRefs]);
@@ -204,7 +207,8 @@ export default function PriorityView({
         </span>
       </div>
 
-      {/* 탭 (유형별 진행 현황) */}
+      {/* 탭 (유형별 진행 현황) — 검토자 모드에선 숨김 */}
+      {!reviewMode && (
       <Card className="p-4">
         <p className="mb-3 text-sm font-semibold text-slate-800">
           우선순위 진행 현황{" "}
@@ -249,6 +253,7 @@ export default function PriorityView({
           })}
         </div>
       </Card>
+      )}
 
       {/* 검색 */}
       <div className="flex items-center gap-3">

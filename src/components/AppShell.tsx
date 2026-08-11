@@ -26,6 +26,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const fullWidth =
     pathname.startsWith("/contracts") ||
     pathname.startsWith("/priority") ||
+    pathname.startsWith("/review-priority") ||
     pathname.startsWith("/econtracts");
 
   useEffect(() => {
