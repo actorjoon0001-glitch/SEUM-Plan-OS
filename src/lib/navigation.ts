@@ -57,6 +57,35 @@ export const navSections: NavSection[] = [
     ],
   },
   {
+    title: "설계 업무 리스트",
+    items: [
+      {
+        href: "/tasks/kimcheolhwan",
+        label: "김철환",
+        description: "김철환 설계 업무",
+        icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
+      },
+      {
+        href: "/tasks/kimseonghyeon",
+        label: "김성현",
+        description: "김성현 설계 업무",
+        icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
+      },
+      {
+        href: "/tasks/anjuntaek",
+        label: "안준택",
+        description: "안준택 설계 업무",
+        icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
+      },
+      {
+        href: "/tasks/kimchanyeong",
+        label: "김찬영",
+        description: "김찬영 설계 업무",
+        icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
+      },
+    ],
+  },
+  {
     title: "설계 작업",
     items: [
       {
