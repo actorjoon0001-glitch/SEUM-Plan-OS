@@ -3,10 +3,10 @@ import PageHeader from "@/components/PageHeader";
 import { ConnectionNotice } from "@/components/Notice";
 import { getContracts, getEContracts, getDesignAssignees } from "@/lib/data";
 import {
-  assigneeOf,
   attachAssignees,
   depositReceived,
   econtractToPriorityItem,
+  effectiveAssignee,
   projectTypeKey,
 } from "@/lib/priority";
 import { memberBySlug } from "@/lib/members";
@@ -56,7 +56,7 @@ export default async function MemberTasksPage({
   const queue = attachAssignees(
     [...contractItems, ...econItems],
     assigneeMap,
-  ).filter((c) => assigneeOf(c) === m.name);
+  ).filter((c) => effectiveAssignee(c) === m.name);
 
   const econtractRefs = Array.from(
     new Set(
