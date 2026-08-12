@@ -171,22 +171,8 @@ function cmpDateAsc(a: string | null, b: string | null): number {
 }
 
 /**
- * 우선순위 정렬.
- * 기본: 계약일 오름차순.
- * 전원주택(house) 탭: 건축허가일 있는 건이 최상단(허가일 오름차순), 나머지는 계약일 오름차순.
+ * 우선순위 정렬 — 모든 탭 계약일 오름차순(빠른 순).
  */
-export function sortPriority(list: Contract[], tab: TabKey): Contract[] {
-  if (tab === "house") {
-    return [...list].sort((a, b) => {
-      const pa = permitCertDate(a);
-      const pb = permitCertDate(b);
-      if (!!pa !== !!pb) return pa ? -1 : 1;
-      if (pa && pb) {
-        const c = pa.localeCompare(pb);
-        if (c !== 0) return c;
-      }
-      return cmpDateAsc(a.contract_date, b.contract_date);
-    });
-  }
+export function sortPriority(list: Contract[], _tab: TabKey): Contract[] {
   return [...list].sort((a, b) => cmpDateAsc(a.contract_date, b.contract_date));
 }
