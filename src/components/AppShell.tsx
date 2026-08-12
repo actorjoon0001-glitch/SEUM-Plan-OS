@@ -27,6 +27,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     pathname.startsWith("/contracts") ||
     pathname.startsWith("/priority") ||
     pathname.startsWith("/review-priority") ||
+    pathname.startsWith("/tasks") ||
     pathname.startsWith("/econtracts");
 
   useEffect(() => {
