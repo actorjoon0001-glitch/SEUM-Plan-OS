@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import { ConnectionNotice } from "@/components/Notice";
-import { getContracts, getEContracts } from "@/lib/data";
-import { designOwner } from "@/lib/contract";
+import { getContracts, getEContracts, getDesignAssignees } from "@/lib/data";
 import {
+  assigneeOf,
+  attachAssignees,
   depositReceived,
   econtractToPriorityItem,
   projectTypeKey,
@@ -23,7 +24,16 @@ export default async function MemberTasksPage({
   const m = memberBySlug(member);
   if (!m) notFound();
 
-  const [res, eres] = await Promise.all([getContracts(), getEContracts()]);
+  const [res, eres, ares] = await Promise.all([
+    getContracts(),
+    getEContracts(),
+    getDesignAssignees(),
+  ]);
+
+  const assigneeMap = new Map<string, string | null>();
+  for (const a of ares.data) {
+    assigneeMap.set(`${a.source}:${a.ref_id}`, a.assignee);
+  }
 
   // 우선순위 큐와 동일하게 구성 (수기 계약금 수령 건 + 전자계약 전체)
   const contractItems = res.data.filter(depositReceived);
@@ -42,10 +52,11 @@ export default async function MemberTasksPage({
     return econtractToPriorityItem(e, tk);
   });
 
-  // 설계담당이 이 구성원인 건만
-  const queue = [...contractItems, ...econItems].filter(
-    (c) => designOwner(c) === m.name,
-  );
+  // 설계담당(배정)이 이 구성원인 건만
+  const queue = attachAssignees(
+    [...contractItems, ...econItems],
+    assigneeMap,
+  ).filter((c) => assigneeOf(c) === m.name);
 
   const econtractRefs = Array.from(
     new Set(

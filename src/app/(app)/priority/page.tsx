@@ -1,7 +1,8 @@
 import PageHeader from "@/components/PageHeader";
 import { ConnectionNotice } from "@/components/Notice";
-import { getContracts, getEContracts } from "@/lib/data";
+import { getContracts, getEContracts, getDesignAssignees } from "@/lib/data";
 import {
+  attachAssignees,
   depositReceived,
   econtractToPriorityItem,
   projectTypeKey,
@@ -31,7 +32,17 @@ export default async function PriorityPage({
   const initialTab: TabKey =
     type && VALID_TABS.includes(type as TabKey) ? (type as TabKey) : "all";
 
-  const [res, eres] = await Promise.all([getContracts(), getEContracts()]);
+  const [res, eres, ares] = await Promise.all([
+    getContracts(),
+    getEContracts(),
+    getDesignAssignees(),
+  ]);
+
+  // 설계담당 배정 매핑 (source:id → 이름)
+  const assigneeMap = new Map<string, string | null>();
+  for (const a of ares.data) {
+    assigneeMap.set(`${a.source}:${a.ref_id}`, a.assignee);
+  }
 
   // 1) 수기 계약: 계약금 받은 건
   const contractItems = res.data.filter(depositReceived);
@@ -51,7 +62,7 @@ export default async function PriorityPage({
     return econtractToPriorityItem(e, tk);
   });
 
-  const queue = [...contractItems, ...econItems];
+  const queue = attachAssignees([...contractItems, ...econItems], assigneeMap);
 
   // 전자계약서가 있는 (수기) 계약 참조값 → 전자계약 뱃지용
   const econtractRefs = Array.from(
