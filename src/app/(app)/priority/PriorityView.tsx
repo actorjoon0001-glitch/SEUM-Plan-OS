@@ -305,18 +305,21 @@ export default function PriorityView({
                 </tr>
               ) : (
                 list.map((c, i) => {
+                  const rec = c as unknown as Record<string, unknown>;
                   const tk = projectTypeKey(c);
-                  const href = c.local_id
-                    ? `/contracts/${encodeURIComponent(c.local_id)}`
-                    : undefined;
-                  const eco = hasEcontract(c);
+                  const href =
+                    (rec._href as string | undefined) ??
+                    (c.local_id
+                      ? `/contracts/${encodeURIComponent(c.local_id)}`
+                      : undefined);
+                  const eco = rec._source === "econtract" || hasEcontract(c);
                   // 전자계약 건은 텍스트를 초록으로 (수기=검정과 구분)
                   const t = eco ? "text-emerald-700" : "text-slate-600";
                   const tStrong = eco ? "text-emerald-800" : "text-slate-800";
                   const tDim = eco ? "text-emerald-600" : "text-slate-400";
                   return (
                     <tr
-                      key={c.id}
+                      key={(rec._key as string) ?? c.id}
                       onClick={href ? () => router.push(href) : undefined}
                       className={`border-b border-slate-50 ${
                         href ? "cursor-pointer hover:bg-slate-50" : ""
@@ -333,7 +336,7 @@ export default function PriorityView({
                           >
                             {TYPE_LABEL[tk]}
                           </span>
-                          {hasEcontract(c) && (
+                          {eco && (
                             <span className="inline-flex whitespace-nowrap items-center gap-0.5 rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 ring-1 ring-inset ring-violet-600/20">
                               ⚡ 전자계약
                             </span>
@@ -386,7 +389,7 @@ export default function PriorityView({
                               }}
                               className="rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
                             >
-                              계약 상세
+                              {eco ? "전자계약 보기" : "계약 상세"}
                             </button>
                           )}
                         </span>

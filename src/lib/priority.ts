@@ -5,7 +5,7 @@
 // 3) 탭: 전체 / 긴급진행(is_urgent) / 유형 4종(project_type) / 작업완료(priority_done)
 // 4) 완료 체크(priority_done)한 건은 진행 목록에서 빠지고 '작업완료' 탭으로.
 
-import type { Contract } from "@/types";
+import type { Contract, EContract } from "@/types";
 
 export type TypeKey = "container" | "stay" | "house" | "etc";
 export type TabKey = "all" | "urgent" | TypeKey | "done";
@@ -175,4 +175,40 @@ function cmpDateAsc(a: string | null, b: string | null): number {
  */
 export function sortPriority(list: Contract[], _tab: TabKey): Contract[] {
   return [...list].sort((a, b) => cmpDateAsc(a.contract_date, b.contract_date));
+}
+
+/**
+ * 전자계약서를 우선순위 항목(계약 형태)으로 변환.
+ * 수기 계약과 한 목록에서 함께 정렬/표시하기 위함. (_source='econtract', 상세는 /econtracts/{id})
+ */
+export function econtractToPriorityItem(
+  e: EContract,
+  typeKey: TypeKey,
+): Contract {
+  const item: Record<string, unknown> = {
+    id: e.id,
+    local_id: null,
+    customer_name: e.client_name,
+    model_name: null,
+    sales_person: e.salesperson,
+    showroom: e.showroom,
+    showroom_id: e.showroom,
+    status: e.status,
+    contract_date: e.contract_date,
+    created_at: e.created_at,
+    contract_amount: e.total_amount,
+    site_address: e.site_address,
+    project_type: typeKey === "etc" ? null : TYPE_LABEL[typeKey],
+    payload: e.data,
+    is_urgent: null,
+    priority_done: null,
+    design_status: null,
+    design_confirmed: null,
+    is_deleted: null,
+    // 우선순위 표에서 전자계약 행으로 구분
+    _source: "econtract",
+    _href: `/econtracts/${e.id}`,
+    _key: `e-${e.id}`,
+  };
+  return item as unknown as Contract;
 }
