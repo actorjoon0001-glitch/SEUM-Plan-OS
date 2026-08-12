@@ -40,23 +40,6 @@ export const navSections: NavSection[] = [
     ],
   },
   {
-    title: "계약서",
-    items: [
-      {
-        href: "/contracts",
-        label: "수기 계약서",
-        description: "기존 수기 계약 (설계 작업 기준)",
-        icon: "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z",
-      },
-      {
-        href: "/econtracts",
-        label: "전자계약서",
-        description: "전자계약서 열람 (현장주소·금액 등)",
-        icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
-      },
-    ],
-  },
-  {
     title: "설계 업무 리스트",
     items: [
       {
@@ -93,6 +76,23 @@ export const navSections: NavSection[] = [
         label: "시공도면",
         description: "계약별 시공도면 (3D 포함)",
         icon: "M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12",
+      },
+    ],
+  },
+  {
+    title: "계약서",
+    items: [
+      {
+        href: "/contracts",
+        label: "수기 계약서",
+        description: "기존 수기 계약 (설계 작업 기준)",
+        icon: "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z",
+      },
+      {
+        href: "/econtracts",
+        label: "전자계약서",
+        description: "전자계약서 열람 (현장주소·금액 등)",
+        icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
       },
     ],
   },
