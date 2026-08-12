@@ -24,6 +24,10 @@ export default function DesignAssigneeCell({
     "idle",
   );
 
+  // 구성원 목록에 없는 기존 이름(세움os 원본 등)도 드롭박스에 그대로 보이도록 옵션에 추가
+  const extra =
+    value && !MEMBERS.some((m) => m.name === value) ? value : null;
+
   async function onChange(next: string) {
     setValue(next);
     setState("saving");
@@ -69,6 +73,7 @@ export default function DesignAssigneeCell({
             {m.name}
           </option>
         ))}
+        {extra && <option value={extra}>{extra}</option>}
       </select>
       {state === "saving" && <span className="text-xs text-slate-400">저장…</span>}
       {state === "done" && <span className="text-xs text-emerald-600">✓</span>}

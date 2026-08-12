@@ -16,6 +16,7 @@ import {
   TYPE_LABEL,
   TYPE_NOTE,
   TYPE_BADGE,
+  effectiveAssignee,
   isPriorityDone,
   projectTypeKey,
   regionOf,
@@ -363,7 +364,7 @@ export default function PriorityView({
                         <DesignAssigneeCell
                           source={sourceOf(c)}
                           refId={c.id}
-                          initial={(rec._assignee as string | null) ?? null}
+                          initial={effectiveAssignee(c)}
                         />
                       </td>
                       <td className="px-4 py-3">

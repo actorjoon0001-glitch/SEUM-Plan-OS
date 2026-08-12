@@ -6,6 +6,7 @@
 // 4) 완료 체크(priority_done)한 건은 진행 목록에서 빠지고 '작업완료' 탭으로.
 
 import type { Contract, EContract } from "@/types";
+import { designOwner } from "@/lib/contract";
 
 export type TypeKey = "container" | "stay" | "house" | "etc";
 export type TabKey = "all" | "urgent" | TypeKey | "done";
@@ -72,6 +73,18 @@ export function assigneeOf(c: Contract): string | null {
   const rec = c as unknown as Record<string, unknown>;
   const v = rec._assignee;
   return v ? String(v) : null;
+}
+
+/**
+ * 표시·필터용 실제 설계담당.
+ * 1) 설계OS 배정(design_assignees) 우선
+ * 2) 없으면 세움os 원본 설계담당(design_permit_designer 등) — 기존에 기입된 이름 유지
+ */
+export function effectiveAssignee(c: Contract): string | null {
+  const direct = assigneeOf(c);
+  if (direct) return direct;
+  const owner = designOwner(c);
+  return owner && owner !== "미지정" ? owner : null;
 }
 
 /** 배정 매핑을 각 항목에 _assignee 로 붙인다 (서버에서 큐 구성 후 호출) */
