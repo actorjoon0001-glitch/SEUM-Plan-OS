@@ -259,6 +259,35 @@ export function getEContractsForContract(
 // 직원 (설계팀 담당자)
 // ─────────────────────────────────────────────────────────────
 
+// ─────────────────────────────────────────────────────────────
+// 설계 담당 지정 (설계OS 전용 매핑 테이블)
+// contracts/econtracts 운영 테이블을 건드리지 않고 별도 테이블에 배정 저장.
+// (source: 'contract' | 'econtract', ref_id: 각 테이블 id)
+// ─────────────────────────────────────────────────────────────
+
+export interface DesignAssignee {
+  source: string;
+  ref_id: number;
+  assignee: string | null;
+}
+
+export function getDesignAssignees() {
+  return run<DesignAssignee[]>([], async () => {
+    const sb = await createClient();
+    const { data, error } = await sb
+      .from("design_assignees")
+      .select("source, ref_id, assignee");
+    if (error) {
+      // 아직 테이블이 없으면 오류 대신 빈 목록으로 처리
+      if (/does not exist|could not find|relation|schema cache/i.test(error.message)) {
+        return [];
+      }
+      throw new Error(error.message);
+    }
+    return (data ?? []) as DesignAssignee[];
+  });
+}
+
 export function getDesignTeam() {
   return run<Employee[]>([], async () => {
     const sb = await createClient();

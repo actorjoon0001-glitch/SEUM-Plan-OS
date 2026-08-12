@@ -56,6 +56,36 @@ export function isPriorityDone(c: Contract): boolean {
   return Boolean(pick(c, ["priority_done", "priorityDone"]));
 }
 
+/** 우선순위 행의 출처 (수기 계약 / 전자계약) — 설계담당 배정 키에 사용 */
+export function sourceOf(c: Contract): "contract" | "econtract" {
+  const rec = c as unknown as Record<string, unknown>;
+  return rec._source === "econtract" ? "econtract" : "contract";
+}
+
+/** 설계담당 배정 조회 키 (source:id) */
+export function assigneeKey(source: string, refId: number): string {
+  return `${source}:${refId}`;
+}
+
+/** 설계OS 에서 지정한 설계담당 (design_assignees 매핑). 없으면 null */
+export function assigneeOf(c: Contract): string | null {
+  const rec = c as unknown as Record<string, unknown>;
+  const v = rec._assignee;
+  return v ? String(v) : null;
+}
+
+/** 배정 매핑을 각 항목에 _assignee 로 붙인다 (서버에서 큐 구성 후 호출) */
+export function attachAssignees(
+  items: Contract[],
+  map: Map<string, string | null>,
+): Contract[] {
+  for (const c of items) {
+    const rec = c as unknown as Record<string, unknown>;
+    rec._assignee = map.get(assigneeKey(sourceOf(c), c.id)) ?? null;
+  }
+  return items;
+}
+
 /** 유형 분류 (project_type 값 기준, 없으면 기타) */
 export function projectTypeKey(c: Contract): TypeKey {
   const raw = pick(c, [

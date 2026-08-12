@@ -1,18 +1,28 @@
 import PageHeader from "@/components/PageHeader";
 import { ConnectionNotice } from "@/components/Notice";
-import { getContracts, getEContracts } from "@/lib/data";
-import { depositReceived, isPriorityDone } from "@/lib/priority";
+import { getContracts, getEContracts, getDesignAssignees } from "@/lib/data";
+import { attachAssignees, depositReceived, isPriorityDone } from "@/lib/priority";
 import PriorityView from "../priority/PriorityView";
 
 export const dynamic = "force-dynamic";
 
 export default async function ReviewPriorityPage() {
-  const [res, eres] = await Promise.all([getContracts(), getEContracts()]);
+  const [res, eres, ares] = await Promise.all([
+    getContracts(),
+    getEContracts(),
+    getDesignAssignees(),
+  ]);
+
+  const assigneeMap = new Map<string, string | null>();
+  for (const a of ares.data) {
+    assigneeMap.set(`${a.source}:${a.ref_id}`, a.assignee);
+  }
 
   // 계약금 받은 건 중 작업완료(priority_done)된 건만 → 검토자 승인 대기 목록
-  const queue = res.data
-    .filter(depositReceived)
-    .filter(isPriorityDone);
+  const queue = attachAssignees(
+    res.data.filter(depositReceived).filter(isPriorityDone),
+    assigneeMap,
+  );
 
   const econtractRefs = Array.from(
     new Set(

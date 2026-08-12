@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/Card";
 import StatusBadge from "@/components/StatusBadge";
-import { designOwner, designStatusLabel } from "@/lib/contract";
+import DesignAssigneeCell from "@/components/DesignAssigneeCell";
+import { designStatusLabel } from "@/lib/contract";
 import { formatDate } from "@/lib/format";
 import {
   type Contract,
@@ -20,6 +21,7 @@ import {
   regionOf,
   showroomOf,
   sortPriority,
+  sourceOf,
 } from "@/lib/priority";
 
 const ALL = "전체";
@@ -357,7 +359,13 @@ export default function PriorityView({
                       <td className={`whitespace-nowrap px-4 py-3 ${t}`}>{showroomOf(c)}</td>
                       <td className={`px-4 py-3 ${t}`}>{regionOf(c)}</td>
                       <td className={`whitespace-nowrap px-4 py-3 ${t}`}>{c.sales_person ?? "-"}</td>
-                      <td className={`whitespace-nowrap px-4 py-3 ${t}`}>{designOwner(c)}</td>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <DesignAssigneeCell
+                          source={sourceOf(c)}
+                          refId={c.id}
+                          initial={(rec._assignee as string | null) ?? null}
+                        />
+                      </td>
                       <td className="px-4 py-3">
                         <StatusBadge status={designStatusLabel(c)} />
                       </td>
