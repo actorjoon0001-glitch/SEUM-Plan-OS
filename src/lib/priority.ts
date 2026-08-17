@@ -6,7 +6,16 @@
 // 4) 완료 체크(priority_done)한 건은 진행 목록에서 빠지고 '작업완료' 탭으로.
 
 import type { Contract, EContract } from "@/types";
-import { designOwner } from "@/lib/contract";
+import { designOwner, designStatusLabel } from "@/lib/contract";
+
+/** 설계진행 상태 드롭박스 옵션 (미착수 / 설계 중 / 완료) */
+export const DESIGN_STATUS_OPTIONS = ["미착수", "설계 중", "완료"] as const;
+
+/** 배정 매핑 1건 (design_assignees) */
+export interface AssignRecord {
+  assignee: string | null;
+  design_status?: string | null;
+}
 
 export type TypeKey = "container" | "stay" | "house" | "etc";
 export type TabKey = "all" | "urgent" | TypeKey | "done";
@@ -87,14 +96,32 @@ export function effectiveAssignee(c: Contract): string | null {
   return owner && owner !== "미지정" ? owner : null;
 }
 
-/** 배정 매핑을 각 항목에 _assignee 로 붙인다 (서버에서 큐 구성 후 호출) */
+/** 설계OS 에서 지정한 설계진행 상태 (design_assignees.design_status). 없으면 null */
+export function statusOf(c: Contract): string | null {
+  const rec = c as unknown as Record<string, unknown>;
+  const v = rec._design_status;
+  return v ? String(v) : null;
+}
+
+/**
+ * 표시용 실제 설계진행 상태.
+ * 1) 설계OS 지정값 우선
+ * 2) 없으면 세움os 원본 상태(designStatusLabel)
+ */
+export function effectiveStatus(c: Contract): string {
+  return statusOf(c) ?? designStatusLabel(c);
+}
+
+/** 배정 매핑(담당·상태)을 각 항목에 붙인다 (서버에서 큐 구성 후 호출) */
 export function attachAssignees(
   items: Contract[],
-  map: Map<string, string | null>,
+  map: Map<string, AssignRecord>,
 ): Contract[] {
   for (const c of items) {
     const rec = c as unknown as Record<string, unknown>;
-    rec._assignee = map.get(assigneeKey(sourceOf(c), c.id)) ?? null;
+    const r = map.get(assigneeKey(sourceOf(c), c.id));
+    rec._assignee = r?.assignee ?? null;
+    rec._design_status = r?.design_status ?? null;
   }
   return items;
 }

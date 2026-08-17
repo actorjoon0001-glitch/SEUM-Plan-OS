@@ -33,20 +33,12 @@ export default function DesignAssigneeCell({
     setState("saving");
     try {
       const sb = createClient();
-      if (!next) {
-        const { error } = await sb
-          .from("design_assignees")
-          .delete()
-          .eq("source", source)
-          .eq("ref_id", refId);
-        if (error) throw error;
-      } else {
-        const { error } = await sb.from("design_assignees").upsert(
-          { source, ref_id: refId, assignee: next },
-          { onConflict: "source,ref_id" },
-        );
-        if (error) throw error;
-      }
+      // 미지정도 null 로 저장(merge upsert) — 같은 행의 design_status 는 보존
+      const { error } = await sb.from("design_assignees").upsert(
+        { source, ref_id: refId, assignee: next || null },
+        { onConflict: "source,ref_id" },
+      );
+      if (error) throw error;
       setState("done");
     } catch {
       setState("error");

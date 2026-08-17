@@ -38,10 +38,16 @@ export default async function PriorityPage({
     getDesignAssignees(),
   ]);
 
-  // 설계담당 배정 매핑 (source:id → 이름)
-  const assigneeMap = new Map<string, string | null>();
+  // 설계담당/진행상태 배정 매핑 (source:id → {assignee, design_status})
+  const assigneeMap = new Map<
+    string,
+    { assignee: string | null; design_status: string | null }
+  >();
   for (const a of ares.data) {
-    assigneeMap.set(`${a.source}:${a.ref_id}`, a.assignee);
+    assigneeMap.set(`${a.source}:${a.ref_id}`, {
+      assignee: a.assignee,
+      design_status: a.design_status ?? null,
+    });
   }
 
   // 1) 수기 계약: 계약금 받은 건

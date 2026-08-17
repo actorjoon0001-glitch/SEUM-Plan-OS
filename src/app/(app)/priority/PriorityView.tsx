@@ -3,9 +3,8 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/Card";
-import StatusBadge from "@/components/StatusBadge";
 import DesignAssigneeCell from "@/components/DesignAssigneeCell";
-import { designStatusLabel } from "@/lib/contract";
+import DesignStatusCell from "@/components/DesignStatusCell";
 import { formatDate } from "@/lib/format";
 import {
   type Contract,
@@ -17,6 +16,7 @@ import {
   TYPE_NOTE,
   TYPE_BADGE,
   effectiveAssignee,
+  effectiveStatus,
   isPriorityDone,
   projectTypeKey,
   regionOf,
@@ -368,7 +368,11 @@ export default function PriorityView({
                         />
                       </td>
                       <td className="px-4 py-3">
-                        <StatusBadge status={designStatusLabel(c)} />
+                        <DesignStatusCell
+                          source={sourceOf(c)}
+                          refId={c.id}
+                          initial={effectiveStatus(c)}
+                        />
                       </td>
                       <td className="px-4 py-3">
                         <span
