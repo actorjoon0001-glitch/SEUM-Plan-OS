@@ -242,7 +242,9 @@ export function econtractToPriorityItem(
     contract_amount: e.total_amount,
     site_address: e.site_address,
     project_type: typeKey === "etc" ? null : TYPE_LABEL[typeKey],
-    payload: e.data,
+    // 우선순위 표에선 큰 data(jsonb) 가 불필요 — 지역은 site_address 로 처리.
+    // 통째로 실으면 전송량만 커지므로 제외한다.
+    payload: null,
     is_urgent: null,
     priority_done: null,
     design_status: null,

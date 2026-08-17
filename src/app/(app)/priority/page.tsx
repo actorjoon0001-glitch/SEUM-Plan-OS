@@ -1,6 +1,6 @@
 import PageHeader from "@/components/PageHeader";
 import { ConnectionNotice } from "@/components/Notice";
-import { getContracts, getEContracts, getDesignAssignees } from "@/lib/data";
+import { getContracts, getEContractsLite, getDesignAssignees } from "@/lib/data";
 import {
   attachAssignees,
   depositReceived,
@@ -34,7 +34,7 @@ export default async function PriorityPage({
 
   const [res, eres, ares] = await Promise.all([
     getContracts(),
-    getEContracts(),
+    getEContractsLite(),
     getDesignAssignees(),
   ]);
 
