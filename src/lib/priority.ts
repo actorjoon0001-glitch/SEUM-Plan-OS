@@ -15,6 +15,7 @@ export const DESIGN_STATUS_OPTIONS = ["미착수", "설계 중", "완료"] as co
 export interface AssignRecord {
   assignee: string | null;
   design_status?: string | null;
+  memo?: string | null;
 }
 
 export type TypeKey = "container" | "stay" | "house" | "etc";
@@ -112,6 +113,13 @@ export function effectiveStatus(c: Contract): string {
   return statusOf(c) ?? designStatusLabel(c);
 }
 
+/** 설계OS 메모 (design_assignees.memo). 없으면 빈 문자열 */
+export function memoOf(c: Contract): string {
+  const rec = c as unknown as Record<string, unknown>;
+  const v = rec._memo;
+  return v ? String(v) : "";
+}
+
 /** 배정 매핑(담당·상태)을 각 항목에 붙인다 (서버에서 큐 구성 후 호출) */
 export function attachAssignees(
   items: Contract[],
@@ -122,6 +130,7 @@ export function attachAssignees(
     const r = map.get(assigneeKey(sourceOf(c), c.id));
     rec._assignee = r?.assignee ?? null;
     rec._design_status = r?.design_status ?? null;
+    rec._memo = r?.memo ?? null;
   }
   return items;
 }

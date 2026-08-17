@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/Card";
 import DesignAssigneeCell from "@/components/DesignAssigneeCell";
 import DesignStatusCell from "@/components/DesignStatusCell";
+import DesignMemoCell from "@/components/DesignMemoCell";
 import { formatDate } from "@/lib/format";
 import {
   type Contract,
@@ -17,6 +18,7 @@ import {
   TYPE_BADGE,
   effectiveAssignee,
   effectiveStatus,
+  memoOf,
   isPriorityDone,
   projectTypeKey,
   regionOf,
@@ -384,6 +386,7 @@ export default function PriorityView({
                 <th className="px-4 py-3 font-medium">담당 영업사원</th>
                 <th className="px-4 py-3 font-medium">설계담당</th>
                 <th className="px-4 py-3 font-medium">설계진행 상태</th>
+                <th className="px-4 py-3 font-medium">메모</th>
                 <th className="px-4 py-3 font-medium">검토자 승인</th>
                 <th className="px-4 py-3 font-medium">비고</th>
                 <th className="px-4 py-3 font-medium">액션</th>
@@ -392,7 +395,7 @@ export default function PriorityView({
             <tbody>
               {list.length === 0 ? (
                 <tr>
-                  <td colSpan={13} className="px-4 py-10 text-center text-slate-400">
+                  <td colSpan={14} className="px-4 py-10 text-center text-slate-400">
                     해당하는 계약이 없습니다.
                   </td>
                 </tr>
@@ -462,6 +465,13 @@ export default function PriorityView({
                           source={sourceOf(c)}
                           refId={c.id}
                           initial={effectiveStatus(c)}
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <DesignMemoCell
+                          source={sourceOf(c)}
+                          refId={c.id}
+                          initial={memoOf(c)}
                         />
                       </td>
                       <td className="px-4 py-3">

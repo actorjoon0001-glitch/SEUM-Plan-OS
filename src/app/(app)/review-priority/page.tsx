@@ -15,12 +15,17 @@ export default async function ReviewPriorityPage() {
 
   const assigneeMap = new Map<
     string,
-    { assignee: string | null; design_status: string | null }
+    {
+      assignee: string | null;
+      design_status: string | null;
+      memo: string | null;
+    }
   >();
   for (const a of ares.data) {
     assigneeMap.set(`${a.source}:${a.ref_id}`, {
       assignee: a.assignee,
       design_status: a.design_status ?? null,
+      memo: a.memo ?? null,
     });
   }
 
