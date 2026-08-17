@@ -84,6 +84,7 @@ export default function PriorityView({
   const [year, setYear] = useState(ALL);
   const [month, setMonth] = useState(ALL);
   const [showroom, setShowroom] = useState(ALL);
+  const [source, setSource] = useState<"all" | "contract" | "econtract">("all");
   const [tab, setTab] = useState<TabKey>(initialTab);
   const [search, setSearch] = useState("");
 
@@ -106,7 +107,7 @@ export default function PriorityView({
     return [...set].sort();
   }, [contracts]);
 
-  // 년/월/전시장 필터 적용 (탭·검색 이전 단계)
+  // 년/월/전시장/구분 필터 적용 (탭·검색 이전 단계)
   const base = useMemo(() => {
     return contracts.filter((c) => {
       const ymd = c.contract_date ?? "";
@@ -116,9 +117,10 @@ export default function PriorityView({
         if (String(Number(m)) !== month) return false;
       }
       if (showroom !== ALL && showroomOf(c) !== showroom) return false;
+      if (source !== "all" && sourceOf(c) !== source) return false;
       return true;
     });
-  }, [contracts, year, month, showroom]);
+  }, [contracts, year, month, showroom, source]);
 
   // 진행/완료 분리
   const active = useMemo(() => base.filter((c) => !isPriorityDone(c)), [base]);
@@ -255,8 +257,35 @@ export default function PriorityView({
             ))}
           </select>
         </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-slate-500">구분</span>
+          <div className="flex rounded-lg border border-slate-200 bg-white p-0.5">
+            {(
+              [
+                { key: "all", label: "전체" },
+                { key: "contract", label: "수기 계약" },
+                { key: "econtract", label: "전자계약" },
+              ] as const
+            ).map((s) => (
+              <button
+                key={s.key}
+                type="button"
+                onClick={() => setSource(s.key)}
+                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                  source === s.key
+                    ? s.key === "econtract"
+                      ? "bg-emerald-600 text-white"
+                      : "bg-brand-600 text-white"
+                    : "text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </label>
         <span className="pb-2 text-xs text-slate-400">
-          ※ 년·월·전시장으로 목록을 필터합니다
+          ※ 년·월·전시장·구분으로 목록을 필터합니다
         </span>
       </div>
 
