@@ -30,9 +30,15 @@ export default async function MemberTasksPage({
     getDesignAssignees(),
   ]);
 
-  const assigneeMap = new Map<string, string | null>();
+  const assigneeMap = new Map<
+    string,
+    { assignee: string | null; design_status: string | null }
+  >();
   for (const a of ares.data) {
-    assigneeMap.set(`${a.source}:${a.ref_id}`, a.assignee);
+    assigneeMap.set(`${a.source}:${a.ref_id}`, {
+      assignee: a.assignee,
+      design_status: a.design_status ?? null,
+    });
   }
 
   // 우선순위 큐와 동일하게 구성 (수기 계약금 수령 건 + 전자계약 전체)

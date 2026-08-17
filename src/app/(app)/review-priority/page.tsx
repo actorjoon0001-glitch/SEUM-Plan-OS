@@ -13,9 +13,15 @@ export default async function ReviewPriorityPage() {
     getDesignAssignees(),
   ]);
 
-  const assigneeMap = new Map<string, string | null>();
+  const assigneeMap = new Map<
+    string,
+    { assignee: string | null; design_status: string | null }
+  >();
   for (const a of ares.data) {
-    assigneeMap.set(`${a.source}:${a.ref_id}`, a.assignee);
+    assigneeMap.set(`${a.source}:${a.ref_id}`, {
+      assignee: a.assignee,
+      design_status: a.design_status ?? null,
+    });
   }
 
   // 계약금 받은 건 중 작업완료(priority_done)된 건만 → 검토자 승인 대기 목록
