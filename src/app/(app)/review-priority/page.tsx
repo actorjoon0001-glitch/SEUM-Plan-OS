@@ -1,6 +1,6 @@
 import PageHeader from "@/components/PageHeader";
 import { ConnectionNotice } from "@/components/Notice";
-import { getContracts, getEContracts, getDesignAssignees } from "@/lib/data";
+import { getContracts, getEContractsLite, getDesignAssignees } from "@/lib/data";
 import { attachAssignees, depositReceived, isPriorityDone } from "@/lib/priority";
 import PriorityView from "../priority/PriorityView";
 
@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function ReviewPriorityPage() {
   const [res, eres, ares] = await Promise.all([
     getContracts(),
-    getEContracts(),
+    getEContractsLite(),
     getDesignAssignees(),
   ]);
 

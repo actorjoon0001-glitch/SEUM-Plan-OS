@@ -207,6 +207,25 @@ export function getEContracts() {
   });
 }
 
+/**
+ * 전자계약서 경량 조회 — 큰 data(jsonb) 컬럼 제외.
+ * 우선순위/구성원/검토자 페이지처럼 목록 필드만 필요한 곳에서 사용해 전송량을 줄인다.
+ */
+export function getEContractsLite() {
+  return run<EContract[]>([], async () => {
+    const sb = await createClient();
+    const { data, error } = await sb
+      .from("econtracts")
+      .select(
+        "id, contract_no, status, client_name, site_address, showroom, salesperson, contract_date, total_amount, created_at, updated_at",
+      )
+      .order("contract_date", { ascending: false, nullsFirst: false })
+      .limit(500);
+    if (error) throw new Error(error.message);
+    return (data ?? []) as EContract[];
+  });
+}
+
 export function getEContract(id: number) {
   return run<EContract | null>(null, async () => {
     const sb = await createClient();
