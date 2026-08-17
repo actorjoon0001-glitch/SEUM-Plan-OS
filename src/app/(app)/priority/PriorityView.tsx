@@ -453,21 +453,30 @@ export default function PriorityView({
                       <td className={`whitespace-nowrap px-4 py-3 ${t}`}>{showroomOf(c)}</td>
                       <td className={`px-4 py-3 ${t}`}>{regionOf(c)}</td>
                       <td className={`whitespace-nowrap px-4 py-3 ${t}`}>{c.sales_person ?? "-"}</td>
-                      <td className="whitespace-nowrap px-4 py-3">
+                      <td
+                        className="whitespace-nowrap px-4 py-3"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <DesignAssigneeCell
                           source={sourceOf(c)}
                           refId={c.id}
                           initial={effectiveAssignee(c)}
                         />
                       </td>
-                      <td className="px-4 py-3">
+                      <td
+                        className="px-4 py-3"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <DesignStatusCell
                           source={sourceOf(c)}
                           refId={c.id}
                           initial={effectiveStatus(c)}
                         />
                       </td>
-                      <td className="px-4 py-3">
+                      <td
+                        className="px-4 py-3"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <DesignMemoCell
                           source={sourceOf(c)}
                           refId={c.id}
