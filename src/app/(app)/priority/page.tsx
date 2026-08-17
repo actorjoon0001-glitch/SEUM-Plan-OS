@@ -76,7 +76,7 @@ export default async function PriorityPage({
   return (
     <>
       <PageHeader
-        title="우선순위"
+        title="설계팀 우선순위"
         description="설계 진행 우선순위 목록입니다. (수기 계약금 수령 건 + 전자계약 전체 · 계약일 빠른 순)"
       />
       <ConnectionNotice configured={res.configured} error={res.error} />
