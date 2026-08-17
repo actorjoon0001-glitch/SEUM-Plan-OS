@@ -27,6 +27,34 @@ import {
 
 const ALL = "전체";
 
+const STAT_TONE: Record<string, string> = {
+  slate: "border-slate-200 bg-slate-50 text-slate-600",
+  blue: "border-blue-200 bg-blue-50 text-blue-700",
+  emerald: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  teal: "border-teal-200 bg-teal-50 text-teal-700",
+  amber: "border-amber-200 bg-amber-50 text-amber-700",
+};
+
+/** 상태 요약 칩 (라벨 + 건수) */
+function StatChip({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: keyof typeof STAT_TONE;
+}) {
+  return (
+    <div
+      className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 ${STAT_TONE[tone]}`}
+    >
+      <span className="text-xs font-medium">{label}</span>
+      <span className="text-sm font-bold tabular-nums">{value}</span>
+    </div>
+  );
+}
+
 /** 비고 (여러 후보 컬럼 대응, 없으면 -) */
 function noteOf(c: Contract): string {
   const rec = c as unknown as Record<string, unknown>;
@@ -95,6 +123,28 @@ export default function PriorityView({
   // 진행/완료 분리
   const active = useMemo(() => base.filter((c) => !isPriorityDone(c)), [base]);
   const done = useMemo(() => base.filter((c) => isPriorityDone(c)), [base]);
+
+  // 설계진행 상태 · 검토자 승인 요약 (현재 필터 기준)
+  const stats = useMemo(() => {
+    let notStarted = 0;
+    let complete = 0;
+    let approved = 0;
+    for (const c of base) {
+      const s = effectiveStatus(c);
+      if (s === "완료") complete += 1;
+      else if (s === "미착수") notStarted += 1;
+      if (c.design_confirmed) approved += 1;
+    }
+    const total = base.length;
+    return {
+      total,
+      notStarted,
+      inProgress: total - notStarted - complete, // 나머지(설계 중·협의 중 등)
+      complete,
+      approved,
+      pending: total - approved,
+    };
+  }, [base]);
 
   // 탭 카운트
   const counts = useMemo(() => {
@@ -208,6 +258,17 @@ export default function PriorityView({
         <span className="pb-2 text-xs text-slate-400">
           ※ 년·월·전시장으로 목록을 필터합니다
         </span>
+      </div>
+
+      {/* 상태 요약 (설계진행 · 검토자 승인) */}
+      <div className="flex flex-wrap items-stretch gap-2">
+        <StatChip label="전체" value={stats.total} tone="slate" />
+        <StatChip label="미착수" value={stats.notStarted} tone="slate" />
+        <StatChip label="진행중" value={stats.inProgress} tone="blue" />
+        <StatChip label="완료" value={stats.complete} tone="emerald" />
+        <span className="mx-1 self-center text-slate-200">|</span>
+        <StatChip label="검토자 승인" value={stats.approved} tone="teal" />
+        <StatChip label="승인 대기" value={stats.pending} tone="amber" />
       </div>
 
       {/* 탭 (유형별 진행 현황) — 검토자 모드에선 숨김 */}
