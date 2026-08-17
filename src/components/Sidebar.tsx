@@ -55,17 +55,25 @@ export default function Sidebar({
             )}
             {section.items.map((item) => {
               const active = isActive(item.href);
+              const base = item.highlight
+                ? active
+                  ? "bg-amber-100 font-bold text-amber-900 ring-1 ring-amber-300"
+                  : "bg-amber-50 font-semibold text-amber-800 ring-1 ring-amber-200 hover:bg-amber-100"
+                : active
+                  ? "bg-brand-50 font-semibold text-brand-700"
+                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900";
+              const iconColor = item.highlight
+                ? "text-amber-500"
+                : active
+                  ? "text-brand-600"
+                  : "text-slate-400 group-hover:text-slate-600";
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={`group flex items-center gap-3 rounded-lg py-2.5 text-sm transition-colors ${
                     item.indent ? "pl-11 pr-3" : "px-3"
-                  } ${
-                    active
-                      ? "bg-brand-50 font-semibold text-brand-700"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                  }`}
+                  } ${base}`}
                 >
                   {item.indent ? (
                     <span
@@ -75,11 +83,7 @@ export default function Sidebar({
                     />
                   ) : (
                     <svg
-                      className={`h-5 w-5 shrink-0 ${
-                        active
-                          ? "text-brand-600"
-                          : "text-slate-400 group-hover:text-slate-600"
-                      }`}
+                      className={`h-5 w-5 shrink-0 ${iconColor}`}
                       fill="none"
                       viewBox="0 0 24 24"
                       strokeWidth={1.7}
