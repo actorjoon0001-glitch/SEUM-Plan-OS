@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import { ConnectionNotice } from "@/components/Notice";
 import { getContracts, getEContractsLite, getDesignAssignees } from "@/lib/data";
@@ -7,25 +6,15 @@ import {
   depositReceived,
   econtractQualifies,
   econtractToPriorityItem,
-  effectiveAssignee,
   effectiveStatus,
   projectTypeKey,
 } from "@/lib/priority";
-import { memberBySlug } from "@/lib/members";
 import type { Contract } from "@/types";
 import PriorityView from "../../priority/PriorityView";
 
 export const dynamic = "force-dynamic";
 
-export default async function MemberTasksPage({
-  params,
-}: {
-  params: Promise<{ member: string }>;
-}) {
-  const { member } = await params;
-  const m = memberBySlug(member);
-  if (!m) notFound();
-
+export default async function DesignDonePage() {
   const [res, eres, ares] = await Promise.all([
     getContracts(),
     getEContractsLite(),
@@ -48,7 +37,7 @@ export default async function MemberTasksPage({
     });
   }
 
-  // 우선순위 큐와 동일하게 구성 (수기 계약금 수령 건 + 전자계약 전체)
+  // 우선순위 큐와 동일하게 구성 (수기 계약금 수령 건 + 전자계약 계약완료 건)
   const contractItems = res.data.filter(depositReceived);
 
   const byLocalId = new Map<string, Contract>();
@@ -65,11 +54,11 @@ export default async function MemberTasksPage({
     return econtractToPriorityItem(e, tk);
   });
 
-  // 이 구성원 담당 & 아직 완료 아닌 건 (완료되면 '설계 완료' 화면으로 이동)
+  // 설계진행 상태가 '완료'인 건만
   const queue = attachAssignees(
     [...contractItems, ...econItems],
     assigneeMap,
-  ).filter((c) => effectiveAssignee(c) === m.name && effectiveStatus(c) !== "완료");
+  ).filter((c) => effectiveStatus(c) === "완료");
 
   const econtractRefs = Array.from(
     new Set(
@@ -82,8 +71,8 @@ export default async function MemberTasksPage({
   return (
     <>
       <PageHeader
-        title={`${m.name} 설계 업무`}
-        description={`${m.name} 님이 설계 담당인 진행 건입니다. (완료 건은 '설계 완료' 화면으로 이동)`}
+        title="설계 완료"
+        description="설계진행 상태가 '완료'로 처리된 건입니다."
       />
       <ConnectionNotice configured={res.configured} error={res.error} />
       <PriorityView

@@ -68,6 +68,12 @@ export const navSections: NavSection[] = [
         description: "김찬영 설계 업무",
         icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
       },
+      {
+        href: "/tasks/done",
+        label: "설계 완료",
+        description: "설계진행 상태 완료 건 모아보기",
+        icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
+      },
     ],
   },
   {
