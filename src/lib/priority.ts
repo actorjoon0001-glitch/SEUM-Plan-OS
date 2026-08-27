@@ -350,13 +350,30 @@ export function econtractToPriorityItem(
  * 설계 진행 큐 공통 구성.
  * 수기 계약(계약금 수령) + 전자계약(계약완료) 을 한 목록으로 만들고 배정 매핑을 붙인다.
  * (우선순위/팀원/완료/검토자 페이지가 모두 이 큐에서 필터만 달리해 사용)
+ *
+ * 전자계약이 존재하는 건(상태 무관)은 '전자계약서 기준' 으로만 취급한다.
+ * → 해당 수기 계약 행은 목록에서 제외하고, 그 전자계약이 '계약완료' 되면
+ *   전자계약 행으로 나타난다. (수기·전자 중복 표시 방지)
  */
 export function buildDesignQueue(
   contracts: Contract[],
   econtracts: EContract[],
   assigneeMap: Map<string, AssignRecord>,
 ): Contract[] {
-  const contractItems = contracts.filter(depositReceived);
+  // 전자계약이 걸려있는 계약번호/고객명 (상태 무관)
+  const econContractNos = new Set(
+    econtracts.map((e) => e.contract_no).filter(Boolean) as string[],
+  );
+  const econClientNames = new Set(
+    econtracts.map((e) => e.client_name).filter(Boolean) as string[],
+  );
+
+  const contractItems = contracts.filter(depositReceived).filter((c) => {
+    // 전자계약이 있는 건은 수기 행 제외 (전자계약서로만)
+    if (c.local_id && econContractNos.has(c.local_id)) return false;
+    if (c.customer_name && econClientNames.has(c.customer_name)) return false;
+    return true;
+  });
 
   const byLocalId = new Map<string, Contract>();
   const byCustomer = new Map<string, Contract>();
