@@ -5,13 +5,12 @@ import {
   buildAssigneeMap,
   buildDesignQueue,
   effectiveApproved,
-  effectiveStatus,
 } from "@/lib/priority";
 import PriorityView from "../priority/PriorityView";
 
 export const dynamic = "force-dynamic";
 
-export default async function ReviewPriorityPage() {
+export default async function ReviewDonePage() {
   const [res, eres, ares] = await Promise.all([
     getContracts(),
     getEContractsLite(),
@@ -20,9 +19,9 @@ export default async function ReviewPriorityPage() {
 
   const assigneeMap = buildAssigneeMap(ares.data);
 
-  // 설계 완료됐지만 아직 검토자 승인 안 된 건 (승인하면 '검토 완료'로 이동)
-  const queue = buildDesignQueue(res.data, eres.data, assigneeMap).filter(
-    (c) => effectiveStatus(c) === "완료" && !effectiveApproved(c),
+  // 검토자 승인된 건만
+  const queue = buildDesignQueue(res.data, eres.data, assigneeMap).filter((c) =>
+    effectiveApproved(c),
   );
 
   const econtractRefs = Array.from(
@@ -36,8 +35,8 @@ export default async function ReviewPriorityPage() {
   return (
     <>
       <PageHeader
-        title="검토자 우선순위"
-        description="설계 완료된 건 중 검토자 승인 대기 목록입니다. 승인하면 '검토 완료'로 이동합니다."
+        title="검토 완료"
+        description="검토자 승인이 완료된 건입니다."
       />
       <ConnectionNotice configured={res.configured} error={res.error} />
       <PriorityView

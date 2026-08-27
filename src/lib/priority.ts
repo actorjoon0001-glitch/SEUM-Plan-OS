@@ -16,6 +16,30 @@ export interface AssignRecord {
   assignee: string | null;
   design_status?: string | null;
   memo?: string | null;
+  review_done?: boolean | null;
+}
+
+/** design_assignees 행 목록 → source:id 키 맵 */
+export function buildAssigneeMap(
+  rows: ReadonlyArray<{
+    source: string;
+    ref_id: number;
+    assignee: string | null;
+    design_status?: string | null;
+    memo?: string | null;
+    review_done?: boolean | null;
+  }>,
+): Map<string, AssignRecord> {
+  const map = new Map<string, AssignRecord>();
+  for (const a of rows) {
+    map.set(`${a.source}:${a.ref_id}`, {
+      assignee: a.assignee,
+      design_status: a.design_status ?? null,
+      memo: a.memo ?? null,
+      review_done: a.review_done ?? null,
+    });
+  }
+  return map;
 }
 
 export type TypeKey = "container" | "stay" | "house" | "etc";
@@ -120,6 +144,24 @@ export function memoOf(c: Contract): string {
   return v ? String(v) : "";
 }
 
+/** 설계OS 검토자 승인 지정값 (design_assignees.review_done). 미지정이면 null */
+export function reviewDoneOf(c: Contract): boolean | null {
+  const rec = c as unknown as Record<string, unknown>;
+  const v = rec._review_done;
+  return v === true ? true : v === false ? false : null;
+}
+
+/**
+ * 표시용 실제 검토자 승인 여부.
+ * 1) 설계OS 지정값(review_done) 우선
+ * 2) 없으면 세움os 원본 승인(design_confirmed)
+ */
+export function effectiveApproved(c: Contract): boolean {
+  const v = reviewDoneOf(c);
+  if (v !== null) return v;
+  return Boolean(c.design_confirmed);
+}
+
 /** 배정 매핑(담당·상태)을 각 항목에 붙인다 (서버에서 큐 구성 후 호출) */
 export function attachAssignees(
   items: Contract[],
@@ -131,6 +173,7 @@ export function attachAssignees(
     rec._assignee = r?.assignee ?? null;
     rec._design_status = r?.design_status ?? null;
     rec._memo = r?.memo ?? null;
+    rec._review_done = r?.review_done ?? null;
   }
   return items;
 }
@@ -301,4 +344,33 @@ export function econtractToPriorityItem(
     _key: `e-${e.id}`,
   };
   return item as unknown as Contract;
+}
+
+/**
+ * 설계 진행 큐 공통 구성.
+ * 수기 계약(계약금 수령) + 전자계약(계약완료) 을 한 목록으로 만들고 배정 매핑을 붙인다.
+ * (우선순위/팀원/완료/검토자 페이지가 모두 이 큐에서 필터만 달리해 사용)
+ */
+export function buildDesignQueue(
+  contracts: Contract[],
+  econtracts: EContract[],
+  assigneeMap: Map<string, AssignRecord>,
+): Contract[] {
+  const contractItems = contracts.filter(depositReceived);
+
+  const byLocalId = new Map<string, Contract>();
+  const byCustomer = new Map<string, Contract>();
+  for (const c of contracts) {
+    if (c.local_id) byLocalId.set(c.local_id, c);
+    if (c.customer_name) byCustomer.set(c.customer_name, c);
+  }
+  const econItems = econtracts.filter(econtractQualifies).map((e) => {
+    const matched =
+      (e.contract_no ? byLocalId.get(e.contract_no) : undefined) ??
+      (e.client_name ? byCustomer.get(e.client_name) : undefined);
+    const tk = matched ? projectTypeKey(matched) : "etc";
+    return econtractToPriorityItem(e, tk);
+  });
+
+  return attachAssignees([...contractItems, ...econItems], assigneeMap);
 }

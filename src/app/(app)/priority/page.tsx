@@ -2,16 +2,12 @@ import PageHeader from "@/components/PageHeader";
 import { ConnectionNotice } from "@/components/Notice";
 import { getContracts, getEContractsLite, getDesignAssignees } from "@/lib/data";
 import {
-  attachAssignees,
-  depositReceived,
-  econtractQualifies,
-  econtractToPriorityItem,
+  buildAssigneeMap,
+  buildDesignQueue,
   effectiveAssignee,
-  projectTypeKey,
   type TabKey,
 } from "@/lib/priority";
 import { MEMBERS } from "@/lib/members";
-import type { Contract } from "@/types";
 import PriorityView from "./PriorityView";
 
 export const dynamic = "force-dynamic";
@@ -41,48 +37,12 @@ export default async function PriorityPage({
     getDesignAssignees(),
   ]);
 
-  // 설계담당/진행상태 배정 매핑 (source:id → {assignee, design_status})
-  const assigneeMap = new Map<
-    string,
-    {
-      assignee: string | null;
-      design_status: string | null;
-      memo: string | null;
-    }
-  >();
-  for (const a of ares.data) {
-    assigneeMap.set(`${a.source}:${a.ref_id}`, {
-      assignee: a.assignee,
-      design_status: a.design_status ?? null,
-      memo: a.memo ?? null,
-    });
-  }
-
-  // 1) 수기 계약: 계약금 받은 건
-  const contractItems = res.data.filter(depositReceived);
-
-  // 2) 전자계약: 진행상태 '계약완료'(체결+계약금 10%) 건만. 유형은 계약과 매칭해 추정
-  const byLocalId = new Map<string, Contract>();
-  const byCustomer = new Map<string, Contract>();
-  for (const c of res.data) {
-    if (c.local_id) byLocalId.set(c.local_id, c);
-    if (c.customer_name) byCustomer.set(c.customer_name, c);
-  }
-  const econItems = eres.data.filter(econtractQualifies).map((e) => {
-    const matched =
-      (e.contract_no ? byLocalId.get(e.contract_no) : undefined) ??
-      (e.client_name ? byCustomer.get(e.client_name) : undefined);
-    const tk = matched ? projectTypeKey(matched) : "etc";
-    return econtractToPriorityItem(e, tk);
-  });
+  const assigneeMap = buildAssigneeMap(ares.data);
 
   // 설계담당이 팀원(김철환·김성현·안준택·김찬영)으로 지정된 건은
   // 해당 팀원 페이지로 이동하므로 우선순위(배정 대기) 목록에서는 제외한다.
   const memberNames = new Set(MEMBERS.map((m) => m.name));
-  const queue = attachAssignees(
-    [...contractItems, ...econItems],
-    assigneeMap,
-  ).filter((c) => {
+  const queue = buildDesignQueue(res.data, eres.data, assigneeMap).filter((c) => {
     const a = effectiveAssignee(c);
     return !a || !memberNames.has(a);
   });

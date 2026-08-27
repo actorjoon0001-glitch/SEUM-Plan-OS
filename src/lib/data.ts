@@ -290,6 +290,7 @@ export interface DesignAssignee {
   assignee: string | null;
   design_status?: string | null;
   memo?: string | null;
+  review_done?: boolean | null;
 }
 
 export function getDesignAssignees() {
@@ -297,7 +298,7 @@ export function getDesignAssignees() {
     const sb = await createClient();
     const { data, error } = await sb
       .from("design_assignees")
-      .select("source, ref_id, assignee, design_status, memo");
+      .select("source, ref_id, assignee, design_status, memo, review_done");
     if (error) {
       // 아직 테이블이 없으면 오류 대신 빈 목록으로 처리
       if (/does not exist|could not find|relation|schema cache/i.test(error.message)) {
