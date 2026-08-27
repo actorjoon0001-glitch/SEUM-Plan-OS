@@ -42,7 +42,7 @@ export const navSections: NavSection[] = [
     ],
   },
   {
-    title: "설계 업무 리스트",
+    title: "설계 담당자",
     items: [
       {
         href: "/tasks/kimcheolhwan",
