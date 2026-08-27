@@ -5,6 +5,7 @@ import { getContracts, getEContractsLite, getDesignAssignees } from "@/lib/data"
 import {
   attachAssignees,
   depositReceived,
+  econtractQualifies,
   econtractToPriorityItem,
   effectiveAssignee,
   projectTypeKey,
@@ -55,7 +56,7 @@ export default async function MemberTasksPage({
     if (c.local_id) byLocalId.set(c.local_id, c);
     if (c.customer_name) byCustomer.set(c.customer_name, c);
   }
-  const econItems = eres.data.map((e) => {
+  const econItems = eres.data.filter(econtractQualifies).map((e) => {
     const matched =
       (e.contract_no ? byLocalId.get(e.contract_no) : undefined) ??
       (e.client_name ? byCustomer.get(e.client_name) : undefined);
