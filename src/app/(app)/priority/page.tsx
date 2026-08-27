@@ -4,6 +4,7 @@ import { getContracts, getEContractsLite, getDesignAssignees } from "@/lib/data"
 import {
   attachAssignees,
   depositReceived,
+  econtractQualifies,
   econtractToPriorityItem,
   effectiveAssignee,
   projectTypeKey,
@@ -60,14 +61,14 @@ export default async function PriorityPage({
   // 1) 수기 계약: 계약금 받은 건
   const contractItems = res.data.filter(depositReceived);
 
-  // 2) 전자계약: 전부 포함 (각각 별도 줄). 유형은 계약과 매칭해 추정
+  // 2) 전자계약: 진행상태 '계약완료'(체결+계약금 10%) 건만. 유형은 계약과 매칭해 추정
   const byLocalId = new Map<string, Contract>();
   const byCustomer = new Map<string, Contract>();
   for (const c of res.data) {
     if (c.local_id) byLocalId.set(c.local_id, c);
     if (c.customer_name) byCustomer.set(c.customer_name, c);
   }
-  const econItems = eres.data.map((e) => {
+  const econItems = eres.data.filter(econtractQualifies).map((e) => {
     const matched =
       (e.contract_no ? byLocalId.get(e.contract_no) : undefined) ??
       (e.client_name ? byCustomer.get(e.client_name) : undefined);
@@ -99,7 +100,7 @@ export default async function PriorityPage({
     <>
       <PageHeader
         title="설계팀 우선순위"
-        description="설계담당 배정 대기 목록입니다. 담당자를 지정하면 해당 팀원 페이지로 이동합니다. (수기 계약금 수령 건 + 전자계약 전체 · 계약일 빠른 순)"
+        description="설계담당 배정 대기 목록입니다. 담당자를 지정하면 해당 팀원 페이지로 이동합니다. (수기 계약금 수령 건 + 전자계약 계약완료 건 · 계약일 빠른 순)"
       />
       <ConnectionNotice configured={res.configured} error={res.error} />
       <PriorityView

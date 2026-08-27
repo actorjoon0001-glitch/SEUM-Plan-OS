@@ -257,6 +257,15 @@ export function sortPriority(list: Contract[], _tab: TabKey): Contract[] {
 }
 
 /**
+ * 전자계약이 설계 우선순위 대상인지 여부.
+ * 진행상태가 '계약완료'(= 체결 + 계약금 10% 수령) 인 건만 대상.
+ * ('협의중'=미체결, '납품완료'=완료 건은 제외)
+ */
+export function econtractQualifies(e: EContract): boolean {
+  return (e.status?.trim() ?? "") === "계약완료";
+}
+
+/**
  * 전자계약서를 우선순위 항목(계약 형태)으로 변환.
  * 수기 계약과 한 목록에서 함께 정렬/표시하기 위함. (_source='econtract', 상세는 /econtracts/{id})
  */
