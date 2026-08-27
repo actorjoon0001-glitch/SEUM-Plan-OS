@@ -6,6 +6,7 @@ import { Card } from "@/components/Card";
 import DesignAssigneeCell from "@/components/DesignAssigneeCell";
 import DesignStatusCell from "@/components/DesignStatusCell";
 import DesignMemoCell from "@/components/DesignMemoCell";
+import DesignReviewCell from "@/components/DesignReviewCell";
 import { formatDate } from "@/lib/format";
 import {
   type Contract,
@@ -18,6 +19,7 @@ import {
   TYPE_BADGE,
   effectiveAssignee,
   effectiveStatus,
+  effectiveApproved,
   memoOf,
   isPriorityDone,
   projectTypeKey,
@@ -137,7 +139,7 @@ export default function PriorityView({
       const s = effectiveStatus(c);
       if (s === "완료") complete += 1;
       else if (s === "미착수") notStarted += 1;
-      if (c.design_confirmed) approved += 1;
+      if (effectiveApproved(c)) approved += 1;
     }
     const total = base.length;
     return {
@@ -483,16 +485,15 @@ export default function PriorityView({
                           initial={memoOf(c)}
                         />
                       </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${
-                            c.design_confirmed
-                              ? "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20"
-                              : "bg-slate-100 text-slate-500"
-                          }`}
-                        >
-                          {c.design_confirmed ? "승인" : "미승인"}
-                        </span>
+                      <td
+                        className="px-4 py-3"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <DesignReviewCell
+                          source={sourceOf(c)}
+                          refId={c.id}
+                          initial={effectiveApproved(c)}
+                        />
                       </td>
                       <td className={`px-4 py-3 ${tDim}`}>{noteOf(c)}</td>
                       <td className="whitespace-nowrap px-4 py-3">
