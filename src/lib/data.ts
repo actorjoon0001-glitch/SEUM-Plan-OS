@@ -217,7 +217,7 @@ export function getEContractsLite() {
     const { data, error } = await sb
       .from("econtracts")
       .select(
-        "id, contract_no, status, client_name, site_address, showroom, salesperson, contract_date, total_amount, created_at, updated_at",
+        "id, contract_no, status, client_name, site_address, showroom, salesperson, contract_date, total_amount, created_at, updated_at, stage:data->>stage",
       )
       .order("contract_date", { ascending: false, nullsFirst: false })
       .limit(500);

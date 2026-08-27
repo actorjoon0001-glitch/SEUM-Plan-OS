@@ -145,6 +145,8 @@ export interface EContract {
   total_amount: number | string | null;
   /** 전자계약서 상세 내용 (jsonb) */
   data: unknown;
+  /** 진행상태 (data.stage): negotiating(협의중)/completed(계약완료)/delivered(납품완료) 등 */
+  stage?: string | null;
   created_at: string | null;
   updated_at: string | null;
 }

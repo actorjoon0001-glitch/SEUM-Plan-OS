@@ -301,11 +301,11 @@ export function sortPriority(list: Contract[], _tab: TabKey): Contract[] {
 
 /**
  * 전자계약이 설계 우선순위 대상인지 여부.
- * 진행상태가 '계약완료'(= 체결 + 계약금 10% 수령) 인 건만 대상.
- * ('협의중'=미체결, '납품완료'=완료 건은 제외)
+ * 진행상태(data.stage)가 'completed'(계약완료 = 체결 + 계약금 10% 수령) 인 건만.
+ * ('negotiating'=협의중, 'delivered'=납품완료, 'draft' 등은 제외)
  */
 export function econtractQualifies(e: EContract): boolean {
-  return (e.status?.trim() ?? "") === "계약완료";
+  return (e.stage?.trim() ?? "") === "completed";
 }
 
 /**
