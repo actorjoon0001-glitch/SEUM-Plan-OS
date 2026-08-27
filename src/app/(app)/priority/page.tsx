@@ -5,9 +5,11 @@ import {
   attachAssignees,
   depositReceived,
   econtractToPriorityItem,
+  effectiveAssignee,
   projectTypeKey,
   type TabKey,
 } from "@/lib/priority";
+import { MEMBERS } from "@/lib/members";
 import type { Contract } from "@/types";
 import PriorityView from "./PriorityView";
 
@@ -73,7 +75,16 @@ export default async function PriorityPage({
     return econtractToPriorityItem(e, tk);
   });
 
-  const queue = attachAssignees([...contractItems, ...econItems], assigneeMap);
+  // 설계담당이 팀원(김철환·김성현·안준택·김찬영)으로 지정된 건은
+  // 해당 팀원 페이지로 이동하므로 우선순위(배정 대기) 목록에서는 제외한다.
+  const memberNames = new Set(MEMBERS.map((m) => m.name));
+  const queue = attachAssignees(
+    [...contractItems, ...econItems],
+    assigneeMap,
+  ).filter((c) => {
+    const a = effectiveAssignee(c);
+    return !a || !memberNames.has(a);
+  });
 
   // 전자계약서가 있는 (수기) 계약 참조값 → 전자계약 뱃지용
   const econtractRefs = Array.from(
@@ -88,7 +99,7 @@ export default async function PriorityPage({
     <>
       <PageHeader
         title="설계팀 우선순위"
-        description="설계 진행 우선순위 목록입니다. (수기 계약금 수령 건 + 전자계약 전체 · 계약일 빠른 순)"
+        description="설계담당 배정 대기 목록입니다. 담당자를 지정하면 해당 팀원 페이지로 이동합니다. (수기 계약금 수령 건 + 전자계약 전체 · 계약일 빠른 순)"
       />
       <ConnectionNotice configured={res.configured} error={res.error} />
       <PriorityView
