@@ -1,7 +1,7 @@
 import PageHeader from "@/components/PageHeader";
 import { ConnectionNotice } from "@/components/Notice";
 import CurrentUserBadge from "@/components/CurrentUserBadge";
-import { getEContracts, getContracts } from "@/lib/data";
+import { getEContractsLite, getContracts } from "@/lib/data";
 import { projectTypeKey, type TypeKey } from "@/lib/priority";
 import type { Contract } from "@/types";
 import EContractsView from "./EContractsView";
@@ -9,7 +9,7 @@ import EContractsView from "./EContractsView";
 export const dynamic = "force-dynamic";
 
 export default async function EContractsPage() {
-  const [res, cres] = await Promise.all([getEContracts(), getContracts()]);
+  const [res, cres] = await Promise.all([getEContractsLite(), getContracts()]);
 
   // 전자계약서 유형 분류용: 계약(local_id/고객명)과 매칭해 계약의 유형을 사용
   const byLocalId = new Map<string, Contract>();

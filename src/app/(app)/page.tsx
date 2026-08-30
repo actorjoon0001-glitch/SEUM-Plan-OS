@@ -8,7 +8,7 @@ import {
   getContracts,
   getDrawings,
   getSubmissions,
-  getEContracts,
+  getEContractsLite,
 } from "@/lib/data";
 import {
   contractTitle,
@@ -24,7 +24,7 @@ export default async function DashboardPage() {
   const [contractsRes, econtractsRes, drawingsRes, submissionsRes] =
     await Promise.all([
       getContracts(),
-      getEContracts(),
+      getEContractsLite(),
       getDrawings(),
       getSubmissions(),
     ]);
