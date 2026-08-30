@@ -5,6 +5,7 @@ import { Card } from "@/components/Card";
 import Notice, { ConnectionNotice } from "@/components/Notice";
 import EContractDoc from "@/components/EContractDoc";
 import CurrentUserBadge from "@/components/CurrentUserBadge";
+import ConsultDrawingUpload from "@/components/ConsultDrawingUpload";
 import { getEContract } from "@/lib/data";
 import { koShowroom } from "@/lib/priority";
 import { formatDate, formatMoney } from "@/lib/format";
@@ -89,6 +90,11 @@ export default async function EContractDetailPage({
       <p className="mt-2 text-xs text-slate-400">
         원본이 안 보이면(로그인 필요 등) 위 “새 탭에서 열기” 를 눌러 세움 계약서에서 확인하세요.
       </p>
+
+      {/* 협의 도면 업로드 */}
+      <div className="mt-6">
+        <ConsultDrawingUpload econtractId={e.id} />
+      </div>
 
       {/* 간략 내용 (예비) */}
       <details className="mt-6">
