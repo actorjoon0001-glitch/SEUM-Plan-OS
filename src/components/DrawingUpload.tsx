@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useUser } from "@/components/UserContext";
 
 interface FileItem {
   id: number;
@@ -10,6 +11,8 @@ interface FileItem {
   url: string;
   uploadedBy?: string | null;
   uploadedAt?: string | null;
+  deletedBy?: string | null;
+  deletedAt?: string | null;
 }
 
 /** Storage 키에 쓸 수 있는 안전한(영문) 확장자만 추출 */
@@ -18,11 +21,19 @@ function safeExt(name: string): string {
   return m ? m[0].toLowerCase() : "";
 }
 
+/** YYYY.MM.DD HH:mm */
+function fmt(ts?: string | null): string {
+  if (!ts) return "";
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return "";
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}.${p(d.getMonth() + 1)}.${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
 /**
  * 전자계약서별 도면 업로드/열람 (범용).
- * 파일은 Supabase Storage 버킷에 안전한 키로 저장하고,
- * 원본 파일명(한글 포함)·메타데이터는 econtract_drawings 테이블에 기록한다.
- * (협의 도면 = consult-drawings, 시공도면 = construction-drawings)
+ * 파일은 Storage 에 안전한 키로 저장하고, 원본명·업로더(부서·이름)·시각은
+ * econtract_drawings 테이블에 기록한다. 삭제는 소프트 삭제로 이력을 남긴다.
  */
 export default function DrawingUpload({
   econtractId,
@@ -35,6 +46,14 @@ export default function DrawingUpload({
   title: string;
   description: string;
 }) {
+  const { employee, session } = useUser();
+  const actor =
+    (employee
+      ? `${employee.team ? employee.team + " " : ""}${employee.name ?? ""}`.trim()
+      : "") ||
+    session?.user.email ||
+    "알 수 없음";
+
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -47,7 +66,9 @@ export default function DrawingUpload({
       const sb = createClient();
       const { data, error } = await sb
         .from("econtract_drawings")
-        .select("id, path, file_name, uploaded_by, uploaded_at")
+        .select(
+          "id, path, file_name, uploaded_by, uploaded_at, deleted_by, deleted_at",
+        )
         .eq("econtract_id", econtractId)
         .eq("bucket", bucket)
         .order("uploaded_at", { ascending: false });
@@ -63,6 +84,8 @@ export default function DrawingUpload({
           url: pub.publicUrl,
           uploadedBy: r.uploaded_by as string | null,
           uploadedAt: r.uploaded_at as string | null,
+          deletedBy: r.deleted_by as string | null,
+          deletedAt: r.deleted_at as string | null,
         };
       });
       setFiles(items);
@@ -84,8 +107,6 @@ export default function DrawingUpload({
     setError(null);
     try {
       const sb = createClient();
-      const { data: userData } = await sb.auth.getUser();
-      const uploader = userData.user?.email ?? null;
       for (const file of Array.from(fileList)) {
         const key = `${econtractId}/${Date.now()}_${Math.random()
           .toString(36)
@@ -99,10 +120,9 @@ export default function DrawingUpload({
           bucket,
           path: key,
           file_name: file.name,
-          uploaded_by: uploader,
+          uploaded_by: actor,
         });
         if (ins.error) {
-          // 메타 기록 실패 시 올린 파일 정리
           await sb.storage.from(bucket).remove([key]);
           throw ins.error;
         }
@@ -119,13 +139,14 @@ export default function DrawingUpload({
   }
 
   async function onDelete(item: FileItem) {
-    if (!window.confirm("이 도면을 삭제할까요?")) return;
+    if (!window.confirm("이 도면을 삭제할까요? (삭제 이력이 남습니다)")) return;
     try {
       const sb = createClient();
+      // 실제 파일은 제거하고, 이력용으로 행은 소프트 삭제
       await sb.storage.from(bucket).remove([item.path]);
       const { error } = await sb
         .from("econtract_drawings")
-        .delete()
+        .update({ deleted_by: actor, deleted_at: new Date().toISOString() })
         .eq("id", item.id);
       if (error) throw error;
       await load();
@@ -133,6 +154,9 @@ export default function DrawingUpload({
       setError(e instanceof Error ? e.message : "삭제 실패");
     }
   }
+
+  const active = files.filter((f) => !f.deletedAt);
+  const removed = files.filter((f) => f.deletedAt);
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5">
@@ -167,17 +191,14 @@ export default function DrawingUpload({
 
       {loading ? (
         <p className="py-6 text-center text-sm text-slate-400">불러오는 중…</p>
-      ) : files.length === 0 ? (
+      ) : active.length === 0 && removed.length === 0 ? (
         <p className="rounded-lg border border-dashed border-slate-200 py-8 text-center text-sm text-slate-400">
           업로드된 도면이 없습니다.
         </p>
       ) : (
         <ul className="divide-y divide-slate-100">
-          {files.map((f) => (
-            <li
-              key={f.id}
-              className="flex items-center justify-between gap-3 py-2.5"
-            >
+          {active.map((f) => (
+            <li key={f.id} className="flex items-center justify-between gap-3 py-2.5">
               <a
                 href={f.url}
                 target="_blank"
@@ -186,11 +207,10 @@ export default function DrawingUpload({
               >
                 <span aria-hidden>📄</span>
                 <span className="truncate font-medium">{f.label}</span>
-                {f.uploadedBy && (
-                  <span className="shrink-0 text-xs text-slate-400">
-                    {f.uploadedBy}
-                  </span>
-                )}
+                <span className="shrink-0 text-xs text-slate-400">
+                  {f.uploadedBy}
+                  {f.uploadedAt ? ` · ${fmt(f.uploadedAt)}` : ""}
+                </span>
               </a>
               <button
                 type="button"
@@ -199,6 +219,22 @@ export default function DrawingUpload({
               >
                 삭제
               </button>
+            </li>
+          ))}
+          {removed.map((f) => (
+            <li key={f.id} className="flex items-center gap-2 py-2.5 text-sm">
+              <span aria-hidden>🗑</span>
+              <span className="truncate font-medium text-slate-400 line-through">
+                {f.label}
+              </span>
+              <span className="shrink-0 text-xs text-slate-400">
+                업로드 {f.uploadedBy}
+                {f.uploadedAt ? ` (${fmt(f.uploadedAt)})` : ""} · 삭제{" "}
+                <span className="text-rose-500">
+                  {f.deletedBy}
+                  {f.deletedAt ? ` (${fmt(f.deletedAt)})` : ""}
+                </span>
+              </span>
             </li>
           ))}
         </ul>
