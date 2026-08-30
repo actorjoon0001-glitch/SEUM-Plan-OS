@@ -99,7 +99,7 @@ export default async function EContractDetailPage({
           title="전자계약서 원본 (보기 전용)"
           scrolling="no"
           className="w-full"
-          style={{ height: 2800, border: "none", pointerEvents: "none" }}
+          style={{ height: 1900, border: "none", pointerEvents: "none" }}
           loading="lazy"
         />
       </div>
