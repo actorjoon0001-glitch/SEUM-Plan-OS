@@ -157,14 +157,14 @@ export default function Sidebar({
                       />
                     </svg>
                   )}
-                  <span className="flex-1">{item.label}</span>
+                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
                   {(() => {
                     const info = badgeInfo(item.href);
                     if (!info) return null;
                     return (
-                      <span className="ml-auto flex items-center gap-1">
+                      <span className="ml-1 flex shrink-0 items-center gap-0.5">
                         <span
-                          className={`inline-flex min-w-[1.5rem] items-center justify-center rounded-full px-1.5 text-xs font-bold text-white ${
+                          className={`inline-flex min-w-[1.1rem] items-center justify-center rounded-full px-1 py-0 text-[10px] font-bold leading-[1.5] text-white ${
                             info.newCount > 0 ? "bg-emerald-500" : "bg-slate-300"
                           }`}
                           title="신규 자료 수"
@@ -172,7 +172,7 @@ export default function Sidebar({
                           N{info.newCount}
                         </span>
                         <span
-                          className={`inline-flex min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-xs font-bold text-white ${
+                          className={`inline-flex min-w-[1.1rem] items-center justify-center rounded-full px-1 py-0 text-[10px] font-bold leading-[1.5] text-white ${
                             info.unassigned > 0 ? "bg-rose-500" : "bg-slate-300"
                           }`}
                           title="담당자 미배정 수"
