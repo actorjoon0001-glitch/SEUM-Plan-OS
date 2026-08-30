@@ -4,10 +4,11 @@ import StatusBadge from "@/components/StatusBadge";
 import { Card, CardHeader } from "@/components/Card";
 import SalesContractView from "@/components/SalesContractView";
 import DrawingUpload from "@/components/DrawingUpload";
+import PartnerPermitList from "@/components/PartnerPermitList";
 import Notice, { ConnectionNotice } from "@/components/Notice";
-import { getContract, getSubmissions } from "@/lib/data";
+import { getContract, getPartnerSubmissionsByName } from "@/lib/data";
 import { contractTitle, designStatusLabel } from "@/lib/contract";
-import { formatDate, formatFileSize } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -19,11 +20,7 @@ export default async function ContractDetailPage({
   const { localId } = await params;
   const id = decodeURIComponent(localId);
 
-  const [contractRes, submissionsRes] = await Promise.all([
-    getContract(id),
-    getSubmissions(id),
-  ]);
-
+  const contractRes = await getContract(id);
   const c = contractRes.data;
 
   if (contractRes.error) {
@@ -51,7 +48,10 @@ export default async function ContractDetailPage({
     );
   }
 
-  const submissions = submissionsRes.data;
+  // 인허가: 협력사(해영·필·토목)가 올린 자료 중 고객명 매칭 건 자동 연결
+  // (협력사 자료엔 contract_local_id 가 없어 제목의 고객명으로만 매칭됨)
+  const permitRes = await getPartnerSubmissionsByName(c.customer_name);
+  const permits = permitRes.data;
 
   // 고객 전화번호 · 현장 주소 (payload)
   const payload =
@@ -120,25 +120,34 @@ export default async function ContractDetailPage({
         />
       </div>
 
-      {/* 인허가 */}
-      <SectionCard
-        title="인허가 · 제출 서류"
-        count={submissions.length}
-        href="/permits"
-        empty="등록된 인허가 서류가 없습니다."
-      >
-        {submissions.map((s) => (
-          <FileRow
-            key={s.id}
-            name={s.title || s.file_name}
-            url={s.file_url}
-            tag={s.file_type}
-            meta={`${s.design_manager ?? s.uploaded_by_name ?? "-"} · ${formatDate(
-              s.uploaded_at,
-            )} · ${formatFileSize(s.file_size)}`}
+      {/* 인허가 — 외부 건축 협력사가 올린 자료 자동 연결 (고객명 매칭, 읽기 전용) */}
+      <div className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
+        <p className="text-sm font-semibold text-slate-800">
+          인허가{" "}
+          <span className="ml-1 rounded bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-500">
+            협력사 자동 연결
+          </span>
+        </p>
+        <p className="text-xs text-slate-400">
+          외부 건축 협력사(해영·필·토목)가 올린 자료 중 고객명(
+          {c.customer_name ?? "-"})이 포함된 건이 자동으로 표시됩니다.
+        </p>
+        {permits.length === 0 ? (
+          <p className="mt-3 rounded-lg border border-dashed border-slate-200 py-8 text-center text-sm text-slate-400">
+            연결된 협력사 인허가 자료가 없습니다.
+          </p>
+        ) : (
+          <PartnerPermitList
+            items={permits.map((s, i) => ({
+              key: `${(s as { _table?: string })._table ?? ""}-${s.id}-${i}`,
+              title: s.title || s.file_name || "(제목 없음)",
+              fileUrl: s.file_url ?? null,
+              by: s.uploaded_by_name ?? "협력사",
+              at: s.uploaded_at ?? null,
+            }))}
           />
-        ))}
-      </SectionCard>
+        )}
+      </div>
     </>
   );
 }
@@ -175,74 +184,3 @@ function Field({
   );
 }
 
-function SectionCard({
-  title,
-  count,
-  href,
-  empty,
-  children,
-}: {
-  title: string;
-  count: number;
-  href: string;
-  empty: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Card className="mt-6">
-      <CardHeader
-        title={`${title} (${count})`}
-        action={
-          <Link href={href} className="text-xs text-brand-600 hover:underline">
-            전체 보기
-          </Link>
-        }
-      />
-      {count === 0 ? (
-        <p className="px-5 py-6 text-center text-sm text-slate-400">{empty}</p>
-      ) : (
-        <div className="divide-y divide-slate-100">{children}</div>
-      )}
-    </Card>
-  );
-}
-
-function FileRow({
-  name,
-  url,
-  tag,
-  meta,
-}: {
-  name: string | null;
-  url: string | null;
-  tag: string | null;
-  meta: string;
-}) {
-  const label = name || "(파일명 없음)";
-  return (
-    <div className="flex items-center justify-between gap-3 px-5 py-3">
-      <div className="min-w-0">
-        {url ? (
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="truncate text-sm font-medium text-slate-800 hover:text-brand-600 hover:underline"
-          >
-            {label}
-          </a>
-        ) : (
-          <span className="truncate text-sm font-medium text-slate-800">
-            {label}
-          </span>
-        )}
-        <p className="text-xs text-slate-400">{meta}</p>
-      </div>
-      {tag && (
-        <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-500">
-          {tag}
-        </span>
-      )}
-    </div>
-  );
-}
