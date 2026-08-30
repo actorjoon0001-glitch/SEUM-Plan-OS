@@ -131,14 +131,17 @@ export default function Sidebar({
                   <span className="flex-1">{item.label}</span>
                   {(() => {
                     const n = badgeCount(item.href);
-                    return n != null && n > 0 ? (
+                    if (n == null) return null;
+                    return (
                       <span
-                        className="ml-auto inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1.5 text-xs font-bold text-white"
-                        title="담당자 미지정 · 신규 건수"
+                        className={`ml-auto inline-flex min-w-[1.5rem] items-center justify-center rounded-full px-1.5 text-xs font-bold text-white ${
+                          n > 0 ? "bg-rose-500" : "bg-slate-300"
+                        }`}
+                        title="신규 · 담당자 미지정 건수"
                       >
-                        {n}
+                        N{n}
                       </span>
-                    ) : null;
+                    );
                   })()}
                 </Link>
               );
