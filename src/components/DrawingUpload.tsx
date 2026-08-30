@@ -3,14 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-const BUCKET = "consult-drawings";
-
 interface FileItem {
   name: string; // 저장된 파일명 (timestamp_원본명)
   label: string; // 표시용 원본명
   url: string;
   size?: number;
-  createdAt?: string;
 }
 
 function humanSize(n?: number): string {
@@ -21,13 +18,20 @@ function humanSize(n?: number): string {
 }
 
 /**
- * 전자계약서별 협의 도면 업로드/열람.
- * Supabase Storage 버킷(consult-drawings)에 econtractId 폴더로 저장한다.
+ * 전자계약서별 도면 업로드/열람 (범용).
+ * Supabase Storage 의 지정 버킷에 econtractId 폴더로 저장한다.
+ * (협의 도면 = consult-drawings, 시공도면 = construction-drawings)
  */
-export default function ConsultDrawingUpload({
+export default function DrawingUpload({
   econtractId,
+  bucket,
+  title,
+  description,
 }: {
   econtractId: number;
+  bucket: string;
+  title: string;
+  description: string;
 }) {
   const prefix = String(econtractId);
   const [files, setFiles] = useState<FileItem[]>([]);
@@ -40,7 +44,7 @@ export default function ConsultDrawingUpload({
     setLoading(true);
     try {
       const sb = createClient();
-      const { data, error } = await sb.storage.from(BUCKET).list(prefix, {
+      const { data, error } = await sb.storage.from(bucket).list(prefix, {
         limit: 100,
         sortBy: { column: "created_at", order: "desc" },
       });
@@ -49,14 +53,12 @@ export default function ConsultDrawingUpload({
         .filter((f) => f.name && !f.name.startsWith("."))
         .map((f) => {
           const path = `${prefix}/${f.name}`;
-          const { data: pub } = sb.storage.from(BUCKET).getPublicUrl(path);
-          const label = f.name.replace(/^\d+_/, "");
+          const { data: pub } = sb.storage.from(bucket).getPublicUrl(path);
           return {
             name: f.name,
-            label,
+            label: f.name.replace(/^\d+_/, ""),
             url: pub.publicUrl,
             size: (f.metadata as { size?: number } | null)?.size,
-            createdAt: (f as { created_at?: string }).created_at,
           };
         });
       setFiles(items);
@@ -66,7 +68,7 @@ export default function ConsultDrawingUpload({
     } finally {
       setLoading(false);
     }
-  }, [prefix]);
+  }, [prefix, bucket]);
 
   useEffect(() => {
     load();
@@ -82,16 +84,14 @@ export default function ConsultDrawingUpload({
         const safe = file.name.replace(/[^\w.\-가-힣()]/g, "_");
         const path = `${prefix}/${Date.now()}_${safe}`;
         const { error } = await sb.storage
-          .from(BUCKET)
+          .from(bucket)
           .upload(path, file, { upsert: false });
         if (error) throw error;
       }
       await load();
     } catch (e) {
       setError(
-        e instanceof Error
-          ? e.message
-          : "업로드 실패 (스토리지 버킷/권한 확인)",
+        e instanceof Error ? e.message : "업로드 실패 (스토리지 버킷/권한 확인)",
       );
     } finally {
       setUploading(false);
@@ -103,9 +103,7 @@ export default function ConsultDrawingUpload({
     if (!window.confirm("이 도면을 삭제할까요?")) return;
     try {
       const sb = createClient();
-      const { error } = await sb.storage
-        .from(BUCKET)
-        .remove([`${prefix}/${name}`]);
+      const { error } = await sb.storage.from(bucket).remove([`${prefix}/${name}`]);
       if (error) throw error;
       await load();
     } catch (e) {
@@ -117,10 +115,8 @@ export default function ConsultDrawingUpload({
     <div className="rounded-xl border border-slate-200 bg-white p-5">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-slate-800">협의 도면</p>
-          <p className="text-xs text-slate-400">
-            이 전자계약서의 협의 도면을 업로드·열람합니다. (이미지·PDF)
-          </p>
+          <p className="text-sm font-semibold text-slate-800">{title}</p>
+          <p className="text-xs text-slate-400">{description}</p>
         </div>
         <label
           className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium text-white ${
@@ -150,7 +146,7 @@ export default function ConsultDrawingUpload({
         <p className="py-6 text-center text-sm text-slate-400">불러오는 중…</p>
       ) : files.length === 0 ? (
         <p className="rounded-lg border border-dashed border-slate-200 py-8 text-center text-sm text-slate-400">
-          업로드된 협의 도면이 없습니다.
+          업로드된 도면이 없습니다.
         </p>
       ) : (
         <ul className="divide-y divide-slate-100">
