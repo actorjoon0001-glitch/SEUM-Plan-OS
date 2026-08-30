@@ -43,12 +43,14 @@ function fmt(ts?: string | null): string {
  * econtract_drawings 테이블에 기록한다. 삭제는 소프트 삭제로 이력을 남긴다.
  */
 export default function DrawingUpload({
-  econtractId,
+  ownerId,
+  source,
   bucket,
   title,
   description,
 }: {
-  econtractId: number;
+  ownerId: number;
+  source: string; // 'contract' | 'econtract'
   bucket: string;
   title: string;
   description: string;
@@ -83,7 +85,8 @@ export default function DrawingUpload({
           .select(
             "id, path, file_name, uploaded_by, uploaded_at, deleted_by, deleted_at",
           )
-          .eq("econtract_id", econtractId)
+          .eq("source", source)
+          .eq("econtract_id", ownerId)
           .eq("bucket", bucket)
           .order("uploaded_at", { ascending: true }), // 먼저 올린 순
         sb.from("employees").select("email, name, team"),
@@ -125,7 +128,7 @@ export default function DrawingUpload({
     } finally {
       setLoading(false);
     }
-  }, [econtractId, bucket]);
+  }, [ownerId, source, bucket]);
 
   useEffect(() => {
     load();
@@ -138,7 +141,7 @@ export default function DrawingUpload({
     try {
       const sb = createClient();
       for (const file of Array.from(fileList)) {
-        const key = `${econtractId}/${Date.now()}_${Math.random()
+        const key = `${source}/${ownerId}/${Date.now()}_${Math.random()
           .toString(36)
           .slice(2, 8)}${safeExt(file.name)}`;
         const up = await sb.storage
@@ -146,7 +149,8 @@ export default function DrawingUpload({
           .upload(key, file, { upsert: false });
         if (up.error) throw up.error;
         const ins = await sb.from("econtract_drawings").insert({
-          econtract_id: econtractId,
+          econtract_id: ownerId,
+          source,
           bucket,
           path: key,
           file_name: file.name,

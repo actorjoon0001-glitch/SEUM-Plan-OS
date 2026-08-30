@@ -94,13 +94,15 @@ export default async function EContractDetailPage({
       {/* 협의 도면 / 시공도면 업로드 */}
       <div className="mt-6 space-y-4">
         <DrawingUpload
-          econtractId={e.id}
+          ownerId={e.id}
+          source="econtract"
           bucket="consult-drawings"
           title="협의 도면"
           description="이 전자계약서의 협의 도면을 업로드·열람합니다. (이미지·PDF)"
         />
         <DrawingUpload
-          econtractId={e.id}
+          ownerId={e.id}
+          source="econtract"
           bucket="construction-drawings"
           title="시공도면"
           description="이 전자계약서의 시공도면을 업로드·열람합니다. (이미지·PDF)"
