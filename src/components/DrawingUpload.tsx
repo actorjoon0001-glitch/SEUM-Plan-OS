@@ -4,22 +4,24 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 interface FileItem {
-  name: string; // 저장된 파일명 (timestamp_원본명)
-  label: string; // 표시용 원본명
+  id: number;
+  path: string;
+  label: string; // 원본 파일명 (한글 포함)
   url: string;
-  size?: number;
+  uploadedBy?: string | null;
+  uploadedAt?: string | null;
 }
 
-function humanSize(n?: number): string {
-  if (!n) return "";
-  if (n < 1024) return `${n}B`;
-  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)}KB`;
-  return `${(n / 1024 / 1024).toFixed(1)}MB`;
+/** Storage 키에 쓸 수 있는 안전한(영문) 확장자만 추출 */
+function safeExt(name: string): string {
+  const m = name.match(/\.[A-Za-z0-9]{1,8}$/);
+  return m ? m[0].toLowerCase() : "";
 }
 
 /**
  * 전자계약서별 도면 업로드/열람 (범용).
- * Supabase Storage 의 지정 버킷에 econtractId 폴더로 저장한다.
+ * 파일은 Supabase Storage 버킷에 안전한 키로 저장하고,
+ * 원본 파일명(한글 포함)·메타데이터는 econtract_drawings 테이블에 기록한다.
  * (협의 도면 = consult-drawings, 시공도면 = construction-drawings)
  */
 export default function DrawingUpload({
@@ -33,7 +35,6 @@ export default function DrawingUpload({
   title: string;
   description: string;
 }) {
-  const prefix = String(econtractId);
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -44,23 +45,26 @@ export default function DrawingUpload({
     setLoading(true);
     try {
       const sb = createClient();
-      const { data, error } = await sb.storage.from(bucket).list(prefix, {
-        limit: 100,
-        sortBy: { column: "created_at", order: "desc" },
-      });
+      const { data, error } = await sb
+        .from("econtract_drawings")
+        .select("id, path, file_name, uploaded_by, uploaded_at")
+        .eq("econtract_id", econtractId)
+        .eq("bucket", bucket)
+        .order("uploaded_at", { ascending: false });
       if (error) throw error;
-      const items: FileItem[] = (data ?? [])
-        .filter((f) => f.name && !f.name.startsWith("."))
-        .map((f) => {
-          const path = `${prefix}/${f.name}`;
-          const { data: pub } = sb.storage.from(bucket).getPublicUrl(path);
-          return {
-            name: f.name,
-            label: f.name.replace(/^\d+_/, ""),
-            url: pub.publicUrl,
-            size: (f.metadata as { size?: number } | null)?.size,
-          };
-        });
+      const items: FileItem[] = (data ?? []).map((r) => {
+        const { data: pub } = sb.storage
+          .from(bucket)
+          .getPublicUrl(r.path as string);
+        return {
+          id: r.id as number,
+          path: r.path as string,
+          label: (r.file_name as string) ?? (r.path as string),
+          url: pub.publicUrl,
+          uploadedBy: r.uploaded_by as string | null,
+          uploadedAt: r.uploaded_at as string | null,
+        };
+      });
       setFiles(items);
       setError(null);
     } catch (e) {
@@ -68,7 +72,7 @@ export default function DrawingUpload({
     } finally {
       setLoading(false);
     }
-  }, [prefix, bucket]);
+  }, [econtractId, bucket]);
 
   useEffect(() => {
     load();
@@ -80,18 +84,33 @@ export default function DrawingUpload({
     setError(null);
     try {
       const sb = createClient();
+      const { data: userData } = await sb.auth.getUser();
+      const uploader = userData.user?.email ?? null;
       for (const file of Array.from(fileList)) {
-        const safe = file.name.replace(/[^\w.\-가-힣()]/g, "_");
-        const path = `${prefix}/${Date.now()}_${safe}`;
-        const { error } = await sb.storage
+        const key = `${econtractId}/${Date.now()}_${Math.random()
+          .toString(36)
+          .slice(2, 8)}${safeExt(file.name)}`;
+        const up = await sb.storage
           .from(bucket)
-          .upload(path, file, { upsert: false });
-        if (error) throw error;
+          .upload(key, file, { upsert: false });
+        if (up.error) throw up.error;
+        const ins = await sb.from("econtract_drawings").insert({
+          econtract_id: econtractId,
+          bucket,
+          path: key,
+          file_name: file.name,
+          uploaded_by: uploader,
+        });
+        if (ins.error) {
+          // 메타 기록 실패 시 올린 파일 정리
+          await sb.storage.from(bucket).remove([key]);
+          throw ins.error;
+        }
       }
       await load();
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : "업로드 실패 (스토리지 버킷/권한 확인)",
+        e instanceof Error ? e.message : "업로드 실패 (버킷/테이블/권한 확인)",
       );
     } finally {
       setUploading(false);
@@ -99,11 +118,15 @@ export default function DrawingUpload({
     }
   }
 
-  async function onDelete(name: string) {
+  async function onDelete(item: FileItem) {
     if (!window.confirm("이 도면을 삭제할까요?")) return;
     try {
       const sb = createClient();
-      const { error } = await sb.storage.from(bucket).remove([`${prefix}/${name}`]);
+      await sb.storage.from(bucket).remove([item.path]);
+      const { error } = await sb
+        .from("econtract_drawings")
+        .delete()
+        .eq("id", item.id);
       if (error) throw error;
       await load();
     } catch (e) {
@@ -152,7 +175,7 @@ export default function DrawingUpload({
         <ul className="divide-y divide-slate-100">
           {files.map((f) => (
             <li
-              key={f.name}
+              key={f.id}
               className="flex items-center justify-between gap-3 py-2.5"
             >
               <a
@@ -163,13 +186,15 @@ export default function DrawingUpload({
               >
                 <span aria-hidden>📄</span>
                 <span className="truncate font-medium">{f.label}</span>
-                <span className="shrink-0 text-xs text-slate-400">
-                  {humanSize(f.size)}
-                </span>
+                {f.uploadedBy && (
+                  <span className="shrink-0 text-xs text-slate-400">
+                    {f.uploadedBy}
+                  </span>
+                )}
               </a>
               <button
                 type="button"
-                onClick={() => onDelete(f.name)}
+                onClick={() => onDelete(f)}
                 className="shrink-0 rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-500 hover:bg-slate-50 hover:text-rose-600"
               >
                 삭제
