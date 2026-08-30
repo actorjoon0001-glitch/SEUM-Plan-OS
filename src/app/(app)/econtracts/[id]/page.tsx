@@ -5,7 +5,7 @@ import { Card } from "@/components/Card";
 import Notice, { ConnectionNotice } from "@/components/Notice";
 import EContractDoc from "@/components/EContractDoc";
 import CurrentUserBadge from "@/components/CurrentUserBadge";
-import ConsultDrawingUpload from "@/components/ConsultDrawingUpload";
+import DrawingUpload from "@/components/DrawingUpload";
 import { getEContract } from "@/lib/data";
 import { koShowroom } from "@/lib/priority";
 import { formatDate, formatMoney } from "@/lib/format";
@@ -91,9 +91,20 @@ export default async function EContractDetailPage({
         원본이 안 보이면(로그인 필요 등) 위 “새 탭에서 열기” 를 눌러 세움 계약서에서 확인하세요.
       </p>
 
-      {/* 협의 도면 업로드 */}
-      <div className="mt-6">
-        <ConsultDrawingUpload econtractId={e.id} />
+      {/* 협의 도면 / 시공도면 업로드 */}
+      <div className="mt-6 space-y-4">
+        <DrawingUpload
+          econtractId={e.id}
+          bucket="consult-drawings"
+          title="협의 도면"
+          description="이 전자계약서의 협의 도면을 업로드·열람합니다. (이미지·PDF)"
+        />
+        <DrawingUpload
+          econtractId={e.id}
+          bucket="construction-drawings"
+          title="시공도면"
+          description="이 전자계약서의 시공도면을 업로드·열람합니다. (이미지·PDF)"
+        />
       </div>
 
       {/* 간략 내용 (예비) */}
