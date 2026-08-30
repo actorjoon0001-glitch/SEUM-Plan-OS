@@ -162,6 +162,25 @@ export function effectiveApproved(c: Contract): boolean {
   return Boolean(c.design_confirmed);
 }
 
+/** 협력사 자료(제목에 고객명 포함) 여부를 각 항목에 _hasPartner 로 붙인다 */
+export function attachPartnerFlag(
+  items: Contract[],
+  titles: string[],
+): Contract[] {
+  const joined = titles.join("\n");
+  for (const c of items) {
+    const rec = c as unknown as Record<string, unknown>;
+    const name = c.customer_name?.trim();
+    rec._hasPartner = Boolean(name && name.length >= 2 && joined.includes(name));
+  }
+  return items;
+}
+
+/** 협력사 자료 매칭 여부 */
+export function hasPartnerDoc(c: Contract): boolean {
+  return (c as unknown as Record<string, unknown>)._hasPartner === true;
+}
+
 /** 배정 매핑(담당·상태)을 각 항목에 붙인다 (서버에서 큐 구성 후 호출) */
 export function attachAssignees(
   items: Contract[],
