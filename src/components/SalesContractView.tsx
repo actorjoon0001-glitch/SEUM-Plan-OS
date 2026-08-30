@@ -236,15 +236,36 @@ function Val({ value }: { value: unknown }) {
   }
   if (typeof value === "string") {
     if (isUrl(value)) {
+      const url = value.trim();
+      const img = /\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(url);
       return (
-        <a
-          href={value}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-brand-600 hover:underline"
-        >
-          📎 파일 열기
-        </a>
+        <div className="space-y-2">
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-brand-600 hover:underline"
+          >
+            📎 파일 열기 (새 탭)
+          </a>
+          <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+            {img ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={url}
+                alt="첨부 미리보기"
+                className="max-h-[460px] w-full object-contain"
+              />
+            ) : (
+              <iframe
+                src={url}
+                title="첨부 미리보기"
+                className="h-[520px] w-full"
+                style={{ border: "none" }}
+              />
+            )}
+          </div>
+        </div>
       );
     }
     return (
