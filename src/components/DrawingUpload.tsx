@@ -21,6 +21,13 @@ function safeExt(name: string): string {
   return m ? m[0].toLowerCase() : "";
 }
 
+function isImage(name: string): boolean {
+  return /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(name);
+}
+function isPdf(name: string): boolean {
+  return /\.pdf$/i.test(name);
+}
+
 /** YYYY.MM.DD HH:mm */
 function fmt(ts?: string | null): string {
   if (!ts) return "";
@@ -63,6 +70,7 @@ export default function DrawingUpload({
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [preview, setPreview] = useState<FileItem | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
@@ -77,7 +85,7 @@ export default function DrawingUpload({
           )
           .eq("econtract_id", econtractId)
           .eq("bucket", bucket)
-          .order("uploaded_at", { ascending: false }),
+          .order("uploaded_at", { ascending: true }), // 먼저 올린 순
         sb.from("employees").select("email, name, team"),
       ]);
       if (error) throw error;
@@ -219,14 +227,19 @@ export default function DrawingUpload({
         </p>
       ) : (
         <ul className="divide-y divide-slate-100">
-          {active.map((f) => (
+          {active.map((f, i) => (
             <li key={f.id} className="flex items-center justify-between gap-3 py-2.5">
               <a
                 href={f.url}
                 target="_blank"
                 rel="noopener noreferrer"
+                onMouseEnter={() => setPreview(f)}
+                onMouseLeave={() => setPreview((p) => (p?.id === f.id ? null : p))}
                 className="flex min-w-0 flex-1 items-center gap-2 text-sm text-slate-700 hover:text-brand-600"
               >
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500">
+                  {i + 1}
+                </span>
                 <span aria-hidden>📄</span>
                 <span className="truncate font-medium">{f.label}</span>
                 <span className="shrink-0 text-xs text-slate-400">
@@ -260,6 +273,32 @@ export default function DrawingUpload({
             </li>
           ))}
         </ul>
+      )}
+
+      {/* 마우스 오버 미리보기 */}
+      {preview && (isImage(preview.label) || isPdf(preview.label)) && (
+        <div
+          className="pointer-events-none fixed right-6 top-24 z-50 w-[440px] max-w-[42vw] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl"
+          aria-hidden
+        >
+          <div className="truncate border-b border-slate-100 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600">
+            {preview.label}
+          </div>
+          {isImage(preview.label) ? (
+            <img
+              src={preview.url}
+              alt={preview.label}
+              className="max-h-[70vh] w-full object-contain"
+            />
+          ) : (
+            <iframe
+              src={preview.url}
+              title={preview.label}
+              className="h-[70vh] w-full"
+              style={{ border: "none" }}
+            />
+          )}
+        </div>
       )}
     </div>
   );
