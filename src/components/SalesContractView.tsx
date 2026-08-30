@@ -334,6 +334,21 @@ function Fields({
   );
 }
 
+// 첨부(파일) 성격의 키 — 상단에 따로 표시
+const ATTACHMENT_KEYS = new Set([
+  "contractAttachment",
+  "attachments",
+  "files",
+  "contractFile",
+  "additionalFiles",
+]);
+
+function isAttachmentField(k: string, v: unknown): boolean {
+  if (ATTACHMENT_KEYS.has(k)) return true;
+  if (typeof v === "string" && isUrl(v)) return true;
+  return false;
+}
+
 export default function SalesContractView({ payload }: { payload: unknown }) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
     return (
@@ -342,5 +357,32 @@ export default function SalesContractView({ payload }: { payload: unknown }) {
       </p>
     );
   }
-  return <Fields data={payload as Record<string, unknown>} />;
+  const data = payload as Record<string, unknown>;
+
+  // 첨부 파일 항목을 분리해 맨 위에 크게 표시
+  const attachmentKeys = Object.keys(data).filter(
+    (k) => k !== "id" && hasContent(data[k]) && isAttachmentField(k, data[k]),
+  );
+  const rest: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(data)) {
+    if (!attachmentKeys.includes(k)) rest[k] = v;
+  }
+
+  return (
+    <div className="space-y-6">
+      {attachmentKeys.length > 0 && (
+        <div className="space-y-4">
+          {attachmentKeys.map((k) => (
+            <div key={k}>
+              <p className="mb-1.5 text-sm font-medium text-slate-500">
+                {label(k)}
+              </p>
+              <Val value={data[k]} />
+            </div>
+          ))}
+        </div>
+      )}
+      <Fields data={rest} />
+    </div>
+  );
 }
