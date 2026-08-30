@@ -19,22 +19,49 @@ export default function Sidebar({
   const searchParams = useSearchParams();
   const currentType = searchParams.get("type");
 
-  // 설계팀 우선순위: 담당자 미지정 건수 배지
-  const [pending, setPending] = useState<number | null>(null);
-  // 외부 건축 협력사: 슬러그별 미지정(신규) 자료 건수
-  const [partnerCounts, setPartnerCounts] = useState<Record<string, number>>({});
+  // 사이드바 배지: key 별 { 신규(N), 미배정 }
+  const [badges, setBadges] = useState<
+    Record<string, { newCount: number; unassigned: number }>
+  >({});
   useEffect(() => {
     let alive = true;
-    fetch("/api/priority-count")
+    // nav 경로 → 배지 key
+    const keyOf = (p: string): string | null => {
+      if (p === "/priority") return "priority";
+      const m = p.match(/^\/partners\/([a-z]+)$/);
+      return m ? m[1] : null;
+    };
+    const currentKey = keyOf(pathname);
+    fetch("/api/sidebar-badges")
       .then((r) => r.json())
-      .then((d) => {
-        if (alive && typeof d?.count === "number") setPending(d.count);
-      })
-      .catch(() => {});
-    fetch("/api/partner-counts")
-      .then((r) => r.json())
-      .then((d) => {
-        if (alive && d && typeof d === "object") setPartnerCounts(d);
+      .then((data: Record<string, { unassigned: number; ts: string[] }>) => {
+        if (!alive || !data || typeof data !== "object") return;
+        const out: Record<string, { newCount: number; unassigned: number }> = {};
+        for (const [key, info] of Object.entries(data)) {
+          const ts = info?.ts ?? [];
+          const maxTs = ts.reduce((a, b) => (b > a ? b : a), "");
+          let baseline = "";
+          try {
+            baseline = localStorage.getItem(`seen:${key}`) ?? "";
+          } catch {}
+          // 처음 보는 경우: 기존 자료는 신규 아님(N0)
+          if (!baseline) {
+            try {
+              localStorage.setItem(`seen:${key}`, maxTs);
+            } catch {}
+            baseline = maxTs;
+          }
+          // 현재 열려있는 메뉴는 '봤음' 처리 → 신규 0으로 리셋
+          if (key === currentKey && maxTs) {
+            try {
+              localStorage.setItem(`seen:${key}`, maxTs);
+            } catch {}
+            baseline = maxTs;
+          }
+          const newCount = ts.filter((t) => t > baseline).length;
+          out[key] = { newCount, unassigned: info?.unassigned ?? 0 };
+        }
+        setBadges(out);
       })
       .catch(() => {});
     return () => {
@@ -42,11 +69,13 @@ export default function Sidebar({
     };
   }, [pathname]);
 
-  // nav href → 배지 숫자 (0/미정이면 숨김)
-  function badgeCount(href: string): number | null {
-    if (href === "/priority") return pending;
+  // nav href → 배지 정보 (없으면 null)
+  function badgeInfo(
+    href: string,
+  ): { newCount: number; unassigned: number } | null {
+    if (href === "/priority") return badges.priority ?? null;
     const m = href.match(/^\/partners\/([a-z]+)$/);
-    if (m && partnerCounts[m[1]] != null) return partnerCounts[m[1]];
+    if (m && badges[m[1]]) return badges[m[1]];
     return null;
   }
   const displayName = userName?.trim() || "세움 설계팀";
@@ -130,16 +159,26 @@ export default function Sidebar({
                   )}
                   <span className="flex-1">{item.label}</span>
                   {(() => {
-                    const n = badgeCount(item.href);
-                    if (n == null) return null;
+                    const info = badgeInfo(item.href);
+                    if (!info) return null;
                     return (
-                      <span
-                        className={`ml-auto inline-flex min-w-[1.5rem] items-center justify-center rounded-full px-1.5 text-xs font-bold text-white ${
-                          n > 0 ? "bg-rose-500" : "bg-slate-300"
-                        }`}
-                        title="신규 · 담당자 미지정 건수"
-                      >
-                        N{n}
+                      <span className="ml-auto flex items-center gap-1">
+                        <span
+                          className={`inline-flex min-w-[1.5rem] items-center justify-center rounded-full px-1.5 text-xs font-bold text-white ${
+                            info.newCount > 0 ? "bg-emerald-500" : "bg-slate-300"
+                          }`}
+                          title="신규 자료 수"
+                        >
+                          N{info.newCount}
+                        </span>
+                        <span
+                          className={`inline-flex min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-xs font-bold text-white ${
+                            info.unassigned > 0 ? "bg-rose-500" : "bg-slate-300"
+                          }`}
+                          title="담당자 미배정 수"
+                        >
+                          {info.unassigned}
+                        </span>
                       </span>
                     );
                   })()}
