@@ -135,6 +135,42 @@ export function getPartnerSubmissions(table: string) {
   });
 }
 
+/**
+ * 고객명으로 협력사 제출 자료(인허가) 자동 매칭.
+ * 협력사 자료엔 계약 연결키가 없어 제목(title)에 고객명이 포함된 건으로 찾는다.
+ * 해영/필/토목 3개 테이블을 모두 조회한다.
+ */
+export function getPartnerSubmissionsByName(name: string | null) {
+  return run<HaeyoungSubmission[]>([], async () => {
+    const key = (name ?? "").split(/[,/·]/)[0].trim();
+    if (!key || key.length < 2) return [];
+    const sb = await createClient();
+    const tables = [
+      "haeyoung_submissions",
+      "pil_submissions",
+      "civil_submissions",
+    ];
+    const all: HaeyoungSubmission[] = [];
+    for (const t of tables) {
+      const { data, error } = await sb
+        .from(t)
+        .select("*")
+        .ilike("title", `%${key}%`)
+        .limit(100);
+      if (error) {
+        if (/does not exist|could not find|relation|schema cache/i.test(error.message)) {
+          continue;
+        }
+        throw new Error(error.message);
+      }
+      for (const row of notDeleted((data ?? []) as HaeyoungSubmission[])) {
+        all.push({ ...row, _table: t } as HaeyoungSubmission & { _table: string });
+      }
+    }
+    return all;
+  });
+}
+
 // ─────────────────────────────────────────────────────────────
 // 협의 · 소통
 // ─────────────────────────────────────────────────────────────
