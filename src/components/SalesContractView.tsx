@@ -147,6 +147,40 @@ function label(k: string): string {
   return LABELS[k] ?? k;
 }
 
+// 빈 값으로 취급할 토큰 (표시하지 않음)
+const EMPTY_TOKENS = new Set([
+  "-",
+  "없음",
+  "(없음)",
+  "none",
+  "null",
+  "n/a",
+  "미입력",
+  "미선택",
+]);
+
+/**
+ * 영업사원이 실제로 체크/입력한 값인지 판정.
+ * - 미입력/빈 값/아니오(false)/없음 → 숨김
+ * - 예(true)/숫자/입력된 문자/선택된 옵션 → 표시
+ */
+function hasContent(v: unknown): boolean {
+  if (v === null || v === undefined || v === "") return false;
+  if (typeof v === "boolean") return v === true; // 아니오(false)는 숨김
+  if (typeof v === "number") return true;
+  if (typeof v === "string") {
+    const t = v.trim().toLowerCase();
+    return t !== "" && !EMPTY_TOKENS.has(t);
+  }
+  if (Array.isArray(v)) return v.some(hasContent);
+  if (typeof v === "object") {
+    return Object.entries(v as Record<string, unknown>).some(
+      ([k, val]) => k !== "id" && hasContent(val),
+    );
+  }
+  return true;
+}
+
 /** 영문 값(코드)을 한글로. 전시장 번호형(showroom1)도 처리. 아니면 원문 유지 */
 function koValue(v: string): string {
   const key = v.trim().toLowerCase();
@@ -245,10 +279,14 @@ function Fields({
   nested?: boolean;
 }) {
   const entries = Object.entries(data).filter(
-    ([k, v]) => v !== null && v !== undefined && v !== "" && k !== "id",
+    ([k, v]) => k !== "id" && hasContent(v),
   );
   if (entries.length === 0) {
-    return <p className="text-sm text-slate-400">내용이 없습니다.</p>;
+    return (
+      <p className="text-sm text-slate-400">
+        영업사원이 체크·입력한 항목이 없습니다.
+      </p>
+    );
   }
   return (
     <dl
