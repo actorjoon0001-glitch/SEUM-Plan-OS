@@ -107,6 +107,13 @@ export default async function EContractDetailPage({
           title="시공도면"
           description="이 전자계약서의 시공도면을 업로드·열람합니다. (이미지·PDF)"
         />
+        <DrawingUpload
+          ownerId={e.id}
+          source="econtract"
+          bucket="permit-docs"
+          title="인허가"
+          description="이 전자계약서의 인허가 서류를 업로드·열람합니다. (이미지·PDF)"
+        />
       </div>
 
       {/* 간략 내용 (예비) */}
