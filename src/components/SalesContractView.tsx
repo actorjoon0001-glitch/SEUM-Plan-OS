@@ -195,10 +195,10 @@ function Val({ value }: { value: unknown }) {
     return <span className="text-slate-300">-</span>;
   }
   if (typeof value === "boolean") {
-    return <span className="text-slate-700">{value ? "예" : "아니오"}</span>;
+    return <span className="text-slate-800">{value ? "예" : "아니오"}</span>;
   }
   if (typeof value === "number") {
-    return <span className="text-slate-700">{value.toLocaleString()}</span>;
+    return <span className="text-slate-800">{value.toLocaleString()}</span>;
   }
   if (typeof value === "string") {
     if (isUrl(value)) {
@@ -214,7 +214,7 @@ function Val({ value }: { value: unknown }) {
       );
     }
     return (
-      <span className="whitespace-pre-wrap break-words text-slate-700">
+      <span className="whitespace-pre-wrap break-words text-slate-800">
         {koValue(value)}
       </span>
     );
@@ -234,7 +234,7 @@ function Val({ value }: { value: unknown }) {
   if (typeof value === "object") {
     return <Fields data={value as Record<string, unknown>} nested />;
   }
-  return <span className="text-slate-700">{String(value)}</span>;
+  return <span className="text-slate-800">{String(value)}</span>;
 }
 
 function Fields({
@@ -253,13 +253,16 @@ function Fields({
   return (
     <dl
       className={
-        nested ? "space-y-2" : "grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2"
+        nested ? "space-y-2" : "grid grid-cols-1 gap-x-12 sm:grid-cols-2"
       }
     >
       {entries.map(([key, val]) => (
-        <div key={key}>
+        <div
+          key={key}
+          className={nested ? "" : "border-b border-slate-100 py-3"}
+        >
           <dt className="text-sm font-medium text-slate-400">{label(key)}</dt>
-          <dd className="mt-0.5 text-base">
+          <dd className="mt-1 text-[15px] font-semibold leading-relaxed text-slate-800">
             {key === "options" && val && typeof val === "object" && !Array.isArray(val) ? (
               <OptionChips options={val as Record<string, unknown>} />
             ) : (
