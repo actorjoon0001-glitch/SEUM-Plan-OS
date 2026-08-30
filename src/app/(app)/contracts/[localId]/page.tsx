@@ -5,13 +5,9 @@ import { Card, CardHeader } from "@/components/Card";
 import SalesContractView from "@/components/SalesContractView";
 import DrawingUpload from "@/components/DrawingUpload";
 import Notice, { ConnectionNotice } from "@/components/Notice";
-import { getContract, getSubmissions, getPayments } from "@/lib/data";
-import {
-  contractTitle,
-  designOwner,
-  designStatusLabel,
-} from "@/lib/contract";
-import { formatDate, formatMoney, formatManwon, formatFileSize } from "@/lib/format";
+import { getContract, getSubmissions } from "@/lib/data";
+import { contractTitle, designStatusLabel } from "@/lib/contract";
+import { formatDate, formatFileSize } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -55,18 +51,22 @@ export default async function ContractDetailPage({
     );
   }
 
-  const paymentsRes = await getPayments(c.id);
-
   const submissions = submissionsRes.data;
-  const payments = paymentsRes.data;
 
-
-  const checklist: [string, boolean | null][] = [
-    ["영업 확인", c.sales_confirmed],
-    ["설계 확인", c.design_confirmed],
-    ["시공 확인", c.construction_confirmed],
-    ["최종 승인", c.final_approved],
-  ];
+  // 고객 전화번호 · 현장 주소 (payload)
+  const payload =
+    c.payload && typeof c.payload === "object" && !Array.isArray(c.payload)
+      ? (c.payload as Record<string, unknown>)
+      : {};
+  const phone = payload.phone ? String(payload.phone) : "-";
+  const siteAddr =
+    String(
+      payload.siteAddress ??
+        payload.address ??
+        c.site_address ??
+        c.address ??
+        "",
+    ) || "-";
 
   return (
     <>
@@ -79,67 +79,15 @@ export default async function ContractDetailPage({
       />
 
       {/* 요약 */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Card className="p-5 lg:col-span-2">
-          <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
-            <Field label="설계 담당" value={designOwner(c)} />
-            <Field label="영업 담당" value={c.sales_person ?? "-"} />
-            <Field label="계약일" value={formatDate(c.contract_date)} />
-            <Field label="모델명" value={c.model_name ?? "-"} />
-            <Field label="쇼룸" value={c.showroom_id ?? "-"} />
-            <Field label="계약 상태" value={c.status ?? "-"} />
-            <Field label="계약금액" value={formatManwon(c.contract_amount)} />
-            <Field label="계약금" value={formatManwon(c.deposit)} />
-            <Field label="잔금" value={formatManwon(c.balance)} />
-          </div>
-
-          {/* 진행 체크리스트 */}
-          <div className="mt-5 flex flex-wrap gap-2 border-t border-slate-100 pt-4">
-            {checklist.map(([label, done]) => (
-              <span
-                key={label}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
-                  done
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-slate-100 text-slate-400"
-                }`}
-              >
-                <span>{done ? "✓" : "○"}</span>
-                {label}
-              </span>
-            ))}
-            {c.is_urgent && (
-              <span className="inline-flex items-center rounded-full bg-rose-100 px-3 py-1 text-xs font-bold text-rose-600">
-                긴급
-              </span>
-            )}
-          </div>
-        </Card>
-
-        {/* 대금 */}
-        <Card>
-          <CardHeader title="대금 내역" />
-          {payments.length === 0 ? (
-            <p className="px-5 py-6 text-center text-sm text-slate-400">
-              등록된 대금 내역이 없습니다.
-            </p>
-          ) : (
-            <div className="divide-y divide-slate-100">
-              {payments.map((p) => (
-                <div key={p.id} className="flex items-center justify-between px-5 py-3 text-sm">
-                  <div>
-                    <p className="font-medium text-slate-700">{p.type ?? "대금"}</p>
-                    <p className="text-xs text-slate-400">{formatDate(p.payment_date)}</p>
-                  </div>
-                  <span className="font-medium text-slate-800">
-                    {formatMoney(p.amount)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-      </div>
+      <Card className="p-5">
+        <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
+          <Field label="고객명" value={c.customer_name ?? "-"} />
+          <Field label="담당 영업사원" value={c.sales_person ?? "-"} />
+          <Field label="고객 전화번호" value={phone} />
+          <Field label="계약일" value={formatDate(c.contract_date)} />
+          <Field label="현장 주소" value={siteAddr} full />
+        </div>
+      </Card>
 
       {/* 영업팀 작성 계약 상세 (원본 데이터) */}
       <Card className="mt-6">
@@ -206,9 +154,17 @@ function BackLink() {
   );
 }
 
-function Field({ label, value }: { label: string; value: string }) {
+function Field({
+  label,
+  value,
+  full = false,
+}: {
+  label: string;
+  value: string;
+  full?: boolean;
+}) {
   return (
-    <div>
+    <div className={full ? "col-span-2 sm:col-span-3" : ""}>
       <p className="text-xs text-slate-400">{label}</p>
       <p className="mt-0.5 font-medium text-slate-800">{value}</p>
     </div>
