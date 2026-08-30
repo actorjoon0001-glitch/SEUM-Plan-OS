@@ -6,6 +6,7 @@ import Notice, { ConnectionNotice } from "@/components/Notice";
 import EContractDoc from "@/components/EContractDoc";
 import CurrentUserBadge from "@/components/CurrentUserBadge";
 import DrawingUpload from "@/components/DrawingUpload";
+import PartnerPermitList from "@/components/PartnerPermitList";
 import { getEContract, getPartnerSubmissionsByName } from "@/lib/data";
 import { formatDate } from "@/lib/format";
 
@@ -147,39 +148,15 @@ export default async function EContractDetailPage({
             연결된 협력사 인허가 자료가 없습니다.
           </p>
         ) : (
-          <ul className="mt-3 divide-y divide-slate-100">
-            {permits.map((s, i) => {
-              const url = s.file_url ?? undefined;
-              return (
-                <li
-                  key={`${(s as { _table?: string })._table ?? ""}-${s.id}-${i}`}
-                  className="flex items-center justify-between gap-3 py-2.5"
-                >
-                  {url ? (
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex min-w-0 flex-1 items-center gap-2 text-sm text-slate-700 hover:text-brand-600"
-                    >
-                      <span aria-hidden>📄</span>
-                      <span className="truncate font-medium">
-                        {s.title || s.file_name || "(제목 없음)"}
-                      </span>
-                    </a>
-                  ) : (
-                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-700">
-                      📄 {s.title || s.file_name || "(제목 없음)"}
-                    </span>
-                  )}
-                  <span className="shrink-0 text-xs text-slate-400">
-                    {s.uploaded_by_name ?? "협력사"}
-                    {s.uploaded_at ? ` · ${formatDate(s.uploaded_at)}` : ""}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
+          <PartnerPermitList
+            items={permits.map((s, i) => ({
+              key: `${(s as { _table?: string })._table ?? ""}-${s.id}-${i}`,
+              title: s.title || s.file_name || "(제목 없음)",
+              fileUrl: s.file_url ?? null,
+              by: s.uploaded_by_name ?? "협력사",
+              at: s.uploaded_at ?? null,
+            }))}
+          />
         )}
       </div>
 
