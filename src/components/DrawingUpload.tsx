@@ -46,13 +46,18 @@ export default function DrawingUpload({
   title: string;
   description: string;
 }) {
-  const { employee, session } = useUser();
-  const actor =
-    (employee
-      ? `${employee.team ? employee.team + " " : ""}${employee.name ?? ""}`.trim()
-      : "") ||
-    session?.user.email ||
-    "알 수 없음";
+  const { session } = useUser();
+  // 업로더/삭제자는 이메일로 저장하고, 표시할 때 부서·이름으로 변환한다.
+  const actorEmail = session?.user.email ?? "";
+
+  const [empMap, setEmpMap] = useState<Record<string, string>>({});
+  const label = useCallback(
+    (who?: string | null): string => {
+      if (!who) return "";
+      return empMap[who.toLowerCase()] ?? who;
+    },
+    [empMap],
+  );
 
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,15 +69,32 @@ export default function DrawingUpload({
     setLoading(true);
     try {
       const sb = createClient();
-      const { data, error } = await sb
-        .from("econtract_drawings")
-        .select(
-          "id, path, file_name, uploaded_by, uploaded_at, deleted_by, deleted_at",
-        )
-        .eq("econtract_id", econtractId)
-        .eq("bucket", bucket)
-        .order("uploaded_at", { ascending: false });
+      const [{ data, error }, emp] = await Promise.all([
+        sb
+          .from("econtract_drawings")
+          .select(
+            "id, path, file_name, uploaded_by, uploaded_at, deleted_by, deleted_at",
+          )
+          .eq("econtract_id", econtractId)
+          .eq("bucket", bucket)
+          .order("uploaded_at", { ascending: false }),
+        sb.from("employees").select("email, name, team"),
+      ]);
       if (error) throw error;
+      // 이메일 → "부서 이름" 매핑
+      const map: Record<string, string> = {};
+      for (const e of (emp.data ?? []) as {
+        email: string | null;
+        name: string | null;
+        team: string | null;
+      }[]) {
+        if (e.email) {
+          map[e.email.toLowerCase()] = `${e.team ? e.team + " " : ""}${
+            e.name ?? ""
+          }`.trim();
+        }
+      }
+      setEmpMap(map);
       const items: FileItem[] = (data ?? []).map((r) => {
         const { data: pub } = sb.storage
           .from(bucket)
@@ -120,7 +142,7 @@ export default function DrawingUpload({
           bucket,
           path: key,
           file_name: file.name,
-          uploaded_by: actor,
+          uploaded_by: actorEmail,
         });
         if (ins.error) {
           await sb.storage.from(bucket).remove([key]);
@@ -146,7 +168,7 @@ export default function DrawingUpload({
       await sb.storage.from(bucket).remove([item.path]);
       const { error } = await sb
         .from("econtract_drawings")
-        .update({ deleted_by: actor, deleted_at: new Date().toISOString() })
+        .update({ deleted_by: actorEmail, deleted_at: new Date().toISOString() })
         .eq("id", item.id);
       if (error) throw error;
       await load();
@@ -208,7 +230,7 @@ export default function DrawingUpload({
                 <span aria-hidden>📄</span>
                 <span className="truncate font-medium">{f.label}</span>
                 <span className="shrink-0 text-xs text-slate-400">
-                  {f.uploadedBy}
+                  {label(f.uploadedBy)}
                   {f.uploadedAt ? ` · ${fmt(f.uploadedAt)}` : ""}
                 </span>
               </a>
@@ -228,10 +250,10 @@ export default function DrawingUpload({
                 {f.label}
               </span>
               <span className="shrink-0 text-xs text-slate-400">
-                업로드 {f.uploadedBy}
+                업로드 {label(f.uploadedBy)}
                 {f.uploadedAt ? ` (${fmt(f.uploadedAt)})` : ""} · 삭제{" "}
                 <span className="text-rose-500">
-                  {f.deletedBy}
+                  {label(f.deletedBy)}
                   {f.deletedAt ? ` (${fmt(f.deletedAt)})` : ""}
                 </span>
               </span>
