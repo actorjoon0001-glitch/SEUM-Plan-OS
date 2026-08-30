@@ -5,13 +5,7 @@ import { Card, CardHeader } from "@/components/Card";
 import SalesContractView from "@/components/SalesContractView";
 import DrawingUpload from "@/components/DrawingUpload";
 import Notice, { ConnectionNotice } from "@/components/Notice";
-import {
-  getContract,
-  getDrawings,
-  getSubmissions,
-  getSitePhotos,
-  getPayments,
-} from "@/lib/data";
+import { getContract, getSubmissions, getPayments } from "@/lib/data";
 import {
   contractTitle,
   designOwner,
@@ -29,13 +23,10 @@ export default async function ContractDetailPage({
   const { localId } = await params;
   const id = decodeURIComponent(localId);
 
-  const [contractRes, drawingsRes, submissionsRes, photosRes] =
-    await Promise.all([
-      getContract(id),
-      getDrawings(id),
-      getSubmissions(id),
-      getSitePhotos(id),
-    ]);
+  const [contractRes, submissionsRes] = await Promise.all([
+    getContract(id),
+    getSubmissions(id),
+  ]);
 
   const c = contractRes.data;
 
@@ -66,9 +57,7 @@ export default async function ContractDetailPage({
 
   const paymentsRes = await getPayments(c.id);
 
-  const drawings = drawingsRes.data;
   const submissions = submissionsRes.data;
-  const photos = photosRes.data;
   const payments = paymentsRes.data;
 
 
@@ -183,24 +172,6 @@ export default async function ContractDetailPage({
         />
       </div>
 
-      {/* 도면 */}
-      <SectionCard
-        title="도면"
-        count={drawings.length}
-        href="/drawings"
-        empty="등록된 도면이 없습니다."
-      >
-        {drawings.map((d) => (
-          <FileRow
-            key={d.id}
-            name={d.file_name}
-            url={d.url}
-            tag={d.kind}
-            meta={`${d.uploaded_by ?? "-"} · ${formatDate(d.uploaded_at)}`}
-          />
-        ))}
-      </SectionCard>
-
       {/* 인허가 */}
       <SectionCard
         title="인허가 · 제출 서류"
@@ -220,25 +191,6 @@ export default async function ContractDetailPage({
           />
         ))}
       </SectionCard>
-
-      {/* 현장 사진 */}
-      <SectionCard
-        title="현장 사진"
-        count={photos.length}
-        href="/site-photos"
-        empty="등록된 현장 사진이 없습니다."
-      >
-        {photos.map((p) => (
-          <FileRow
-            key={p.id}
-            name={p.file_name || p.note || "사진"}
-            url={p.url}
-            tag={null}
-            meta={`${p.uploaded_by ?? "-"} · ${formatDate(p.uploaded_at)}`}
-          />
-        ))}
-      </SectionCard>
-
     </>
   );
 }
