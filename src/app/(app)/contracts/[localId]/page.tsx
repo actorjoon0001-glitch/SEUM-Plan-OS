@@ -3,6 +3,7 @@ import PageHeader from "@/components/PageHeader";
 import StatusBadge from "@/components/StatusBadge";
 import { Card, CardHeader } from "@/components/Card";
 import SalesContractView from "@/components/SalesContractView";
+import DrawingUpload from "@/components/DrawingUpload";
 import Notice, { ConnectionNotice } from "@/components/Notice";
 import {
   getContract,
@@ -10,7 +11,6 @@ import {
   getSubmissions,
   getSitePhotos,
   getPayments,
-  getEContractsForContract,
 } from "@/lib/data";
 import {
   contractTitle,
@@ -64,11 +64,7 @@ export default async function ContractDetailPage({
     );
   }
 
-  const [paymentsRes, econtractsRes] = await Promise.all([
-    getPayments(c.id),
-    getEContractsForContract(c.local_id, c.customer_name),
-  ]);
-  const econtracts = econtractsRes.data;
+  const paymentsRes = await getPayments(c.id);
 
   const drawings = drawingsRes.data;
   const submissions = submissionsRes.data;
@@ -169,44 +165,23 @@ export default async function ContractDetailPage({
         </div>
       </Card>
 
-      {/* 전자계약서 */}
-      <Card className="mt-6">
-        <CardHeader
-          title={`전자계약서 (${econtracts.length})`}
-          action={
-            <Link href="/econtracts" className="text-xs text-brand-600 hover:underline">
-              전체 보기
-            </Link>
-          }
+      {/* 협의 도면 / 시공도면 업로드 */}
+      <div className="mt-6 space-y-4">
+        <DrawingUpload
+          ownerId={c.id}
+          source="contract"
+          bucket="consult-drawings"
+          title="협의 도면"
+          description="이 계약의 협의 도면을 업로드·열람합니다. (이미지·PDF)"
         />
-        {econtracts.length === 0 ? (
-          <p className="px-5 py-6 text-center text-sm text-slate-400">
-            연결된 전자계약서가 없습니다.
-          </p>
-        ) : (
-          <div className="divide-y divide-slate-100">
-            {econtracts.map((e) => (
-              <Link
-                key={e.id}
-                href={`/econtracts/${e.id}`}
-                className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-slate-50"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-slate-800">
-                    {e.contract_no || `전자계약서 #${e.id}`}
-                  </p>
-                  <p className="text-xs text-slate-400">
-                    {e.site_address ?? e.client_name ?? "-"}
-                    {" · "}
-                    {formatMoney(e.total_amount)}
-                  </p>
-                </div>
-                <StatusBadge status={e.status} />
-              </Link>
-            ))}
-          </div>
-        )}
-      </Card>
+        <DrawingUpload
+          ownerId={c.id}
+          source="contract"
+          bucket="construction-drawings"
+          title="시공도면"
+          description="이 계약의 시공도면을 업로드·열람합니다. (이미지·PDF)"
+        />
+      </div>
 
       {/* 도면 */}
       <SectionCard
