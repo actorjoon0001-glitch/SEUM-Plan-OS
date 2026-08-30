@@ -62,8 +62,8 @@ export default async function EContractDetailPage({
         action={<StatusBadge status={e.status} />}
       />
 
-      <Card className="p-5">
-        <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
+      <Card className="px-5 py-2">
+        <div className="grid grid-cols-1 gap-x-12 sm:grid-cols-2">
           <Field label="고객명" value={e.client_name ?? "-"} />
           <Field label="담당 영업사원" value={e.salesperson ?? "-"} />
           <Field label="고객 전화번호" value={phone} />
@@ -165,9 +165,13 @@ function Field({
   full?: boolean;
 }) {
   return (
-    <div className={full ? "col-span-2 sm:col-span-3" : ""}>
-      <p className="text-xs text-slate-400">{label}</p>
-      <p className="mt-0.5 font-medium text-slate-800">{value}</p>
+    <div
+      className={`border-b border-slate-100 py-3 ${
+        full ? "sm:col-span-2" : ""
+      }`}
+    >
+      <p className="text-sm text-slate-400">{label}</p>
+      <p className="mt-1 text-[15px] font-semibold text-slate-800">{value}</p>
     </div>
   );
 }
