@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { navSections } from "@/lib/navigation";
@@ -17,6 +18,21 @@ export default function Sidebar({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentType = searchParams.get("type");
+
+  // 설계팀 우선순위: 담당자 미지정 건수 배지
+  const [pending, setPending] = useState<number | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/priority-count")
+      .then((r) => r.json())
+      .then((d) => {
+        if (alive && typeof d?.count === "number") setPending(d.count);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [pathname]);
   const displayName = userName?.trim() || "세움 설계팀";
   const initial = displayName.charAt(0);
 
@@ -96,7 +112,15 @@ export default function Sidebar({
                       />
                     </svg>
                   )}
-                  {item.label}
+                  <span className="flex-1">{item.label}</span>
+                  {item.href === "/priority" && pending != null && pending > 0 && (
+                    <span
+                      className="ml-auto inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1.5 text-xs font-bold text-white"
+                      title="담당자 미지정 건수"
+                    >
+                      {pending}
+                    </span>
+                  )}
                 </Link>
               );
             })}
