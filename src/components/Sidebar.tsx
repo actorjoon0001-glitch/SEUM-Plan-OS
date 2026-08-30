@@ -21,6 +21,8 @@ export default function Sidebar({
 
   // 설계팀 우선순위: 담당자 미지정 건수 배지
   const [pending, setPending] = useState<number | null>(null);
+  // 외부 건축 협력사: 슬러그별 미지정(신규) 자료 건수
+  const [partnerCounts, setPartnerCounts] = useState<Record<string, number>>({});
   useEffect(() => {
     let alive = true;
     fetch("/api/priority-count")
@@ -29,10 +31,24 @@ export default function Sidebar({
         if (alive && typeof d?.count === "number") setPending(d.count);
       })
       .catch(() => {});
+    fetch("/api/partner-counts")
+      .then((r) => r.json())
+      .then((d) => {
+        if (alive && d && typeof d === "object") setPartnerCounts(d);
+      })
+      .catch(() => {});
     return () => {
       alive = false;
     };
   }, [pathname]);
+
+  // nav href → 배지 숫자 (0/미정이면 숨김)
+  function badgeCount(href: string): number | null {
+    if (href === "/priority") return pending;
+    const m = href.match(/^\/partners\/([a-z]+)$/);
+    if (m && partnerCounts[m[1]] != null) return partnerCounts[m[1]];
+    return null;
+  }
   const displayName = userName?.trim() || "세움 설계팀";
   const initial = displayName.charAt(0);
 
@@ -113,14 +129,17 @@ export default function Sidebar({
                     </svg>
                   )}
                   <span className="flex-1">{item.label}</span>
-                  {item.href === "/priority" && pending != null && pending > 0 && (
-                    <span
-                      className="ml-auto inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1.5 text-xs font-bold text-white"
-                      title="담당자 미지정 건수"
-                    >
-                      {pending}
-                    </span>
-                  )}
+                  {(() => {
+                    const n = badgeCount(item.href);
+                    return n != null && n > 0 ? (
+                      <span
+                        className="ml-auto inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1.5 text-xs font-bold text-white"
+                        title="담당자 미지정 · 신규 건수"
+                      >
+                        {n}
+                      </span>
+                    ) : null;
+                  })()}
                 </Link>
               );
             })}
