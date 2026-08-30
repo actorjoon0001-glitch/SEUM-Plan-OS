@@ -1,7 +1,13 @@
 import PageHeader from "@/components/PageHeader";
 import { ConnectionNotice } from "@/components/Notice";
-import { getContracts, getEContractsLite, getDesignAssignees } from "@/lib/data";
 import {
+  getContracts,
+  getEContractsLite,
+  getDesignAssignees,
+  getPartnerSubmissionTitles,
+} from "@/lib/data";
+import {
+  attachPartnerFlag,
   buildAssigneeMap,
   buildDesignQueue,
   effectiveAssignee,
@@ -31,10 +37,11 @@ export default async function PriorityPage({
   const initialTab: TabKey =
     type && VALID_TABS.includes(type as TabKey) ? (type as TabKey) : "all";
 
-  const [res, eres, ares] = await Promise.all([
+  const [res, eres, ares, ptitles] = await Promise.all([
     getContracts(),
     getEContractsLite(),
     getDesignAssignees(),
+    getPartnerSubmissionTitles(),
   ]);
 
   const assigneeMap = buildAssigneeMap(ares.data);
@@ -42,10 +49,13 @@ export default async function PriorityPage({
   // 설계담당이 팀원(김철환·김성현·안준택·김찬영)으로 지정된 건은
   // 해당 팀원 페이지로 이동하므로 우선순위(배정 대기) 목록에서는 제외한다.
   const memberNames = new Set(MEMBERS.map((m) => m.name));
-  const queue = buildDesignQueue(res.data, eres.data, assigneeMap).filter((c) => {
-    const a = effectiveAssignee(c);
-    return !a || !memberNames.has(a);
-  });
+  const queue = attachPartnerFlag(
+    buildDesignQueue(res.data, eres.data, assigneeMap).filter((c) => {
+      const a = effectiveAssignee(c);
+      return !a || !memberNames.has(a);
+    }),
+    ptitles.data,
+  );
 
   // 전자계약서가 있는 (수기) 계약 참조값 → 전자계약 뱃지용
   const econtractRefs = Array.from(

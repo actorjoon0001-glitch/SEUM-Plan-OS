@@ -135,6 +135,32 @@ export function getPartnerSubmissions(table: string) {
   });
 }
 
+/** 협력사 제출 자료의 제목 목록 (고객명 매칭용, 3개 테이블 합산) */
+export function getPartnerSubmissionTitles() {
+  return run<string[]>([], async () => {
+    const sb = await createClient();
+    const tables = [
+      "haeyoung_submissions",
+      "pil_submissions",
+      "civil_submissions",
+    ];
+    const titles: string[] = [];
+    for (const t of tables) {
+      const { data, error } = await sb.from(t).select("title").limit(2000);
+      if (error) {
+        if (/does not exist|could not find|relation|schema cache/i.test(error.message)) {
+          continue;
+        }
+        throw new Error(error.message);
+      }
+      for (const r of (data ?? []) as { title: string | null }[]) {
+        if (r.title) titles.push(r.title);
+      }
+    }
+    return titles;
+  });
+}
+
 /**
  * 고객명으로 협력사 제출 자료(인허가) 자동 매칭.
  * 협력사 자료엔 계약 연결키가 없어 제목(title)에 고객명이 포함된 건으로 찾는다.

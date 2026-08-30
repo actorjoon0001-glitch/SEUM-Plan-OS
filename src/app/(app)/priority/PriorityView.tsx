@@ -411,17 +411,24 @@ export default function PriorityView({
                       ? `/contracts/${encodeURIComponent(c.local_id)}`
                       : undefined);
                   const eco = rec._source === "econtract" || hasEcontract(c);
+                  const partner = rec._hasPartner === true;
                   // 전자계약 건은 텍스트를 초록으로 (수기=검정과 구분)
                   const t = eco ? "text-emerald-700" : "text-slate-600";
                   const tStrong = eco ? "text-emerald-800" : "text-slate-800";
                   const tDim = eco ? "text-emerald-600" : "text-slate-400";
+                  // 행 강조: 전자계약=초록 / 협력사 인허가=앰버
+                  const rowAccent = eco
+                    ? "bg-emerald-50/70 border-l-[3px] border-l-emerald-400"
+                    : partner
+                      ? "bg-amber-50/70 border-l-[3px] border-l-amber-400"
+                      : "";
                   return (
                     <tr
                       key={(rec._key as string) ?? c.id}
                       onClick={href ? () => router.push(href) : undefined}
                       className={`border-b border-slate-50 ${
                         href ? "cursor-pointer hover:bg-slate-50" : ""
-                      } ${eco ? "bg-emerald-50/30" : ""}`}
+                      } ${rowAccent}`}
                     >
                       <td className={`px-4 py-3 ${tDim}`}>{i + 1}</td>
                       <td className={`whitespace-nowrap px-4 py-3 ${t}`}>
@@ -435,8 +442,13 @@ export default function PriorityView({
                             {TYPE_LABEL[tk]}
                           </span>
                           {eco && (
-                            <span className="inline-flex whitespace-nowrap items-center gap-0.5 rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 ring-1 ring-inset ring-violet-600/20">
+                            <span className="inline-flex whitespace-nowrap items-center gap-0.5 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/30">
                               ⚡ 전자계약
+                            </span>
+                          )}
+                          {partner && (
+                            <span className="inline-flex whitespace-nowrap items-center gap-0.5 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/30">
+                              🏢 협력사 인허가
                             </span>
                           )}
                         </span>
