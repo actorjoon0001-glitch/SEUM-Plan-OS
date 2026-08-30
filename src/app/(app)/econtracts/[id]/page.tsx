@@ -7,8 +7,7 @@ import EContractDoc from "@/components/EContractDoc";
 import CurrentUserBadge from "@/components/CurrentUserBadge";
 import DrawingUpload from "@/components/DrawingUpload";
 import { getEContract } from "@/lib/data";
-import { koShowroom } from "@/lib/priority";
-import { formatDate, formatMoney } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +43,15 @@ export default async function EContractDetailPage({
   // 원본 전자계약서(세움 전산 계약서) 주소 — 같은 econtracts.id 사용
   const originUrl = `https://seum-contract-os.netlify.app/#/edit/${e.id}`;
 
+  // 고객 전화번호 (data.client.phone)
+  const clientObj =
+    e.data && typeof e.data === "object" && !Array.isArray(e.data)
+      ? ((e.data as Record<string, unknown>).client as
+          | Record<string, unknown>
+          | undefined)
+      : undefined;
+  const phone = clientObj?.phone ? String(clientObj.phone) : "-";
+
   return (
     <>
       <CurrentUserBadge />
@@ -56,12 +64,10 @@ export default async function EContractDetailPage({
 
       <Card className="p-5">
         <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
-          <Field label="계약번호" value={e.contract_no ?? "-"} />
           <Field label="고객명" value={e.client_name ?? "-"} />
-          <Field label="담당자" value={e.salesperson ?? "-"} />
-          <Field label="전시장" value={koShowroom(e.showroom)} />
+          <Field label="담당 영업사원" value={e.salesperson ?? "-"} />
+          <Field label="고객 전화번호" value={phone} />
           <Field label="계약일" value={formatDate(e.contract_date)} />
-          <Field label="계약 금액" value={formatMoney(e.total_amount)} />
           <Field label="현장 주소" value={e.site_address ?? "-"} full />
         </div>
       </Card>
