@@ -72,29 +72,40 @@ export default async function EContractDetailPage({
         </div>
       </Card>
 
-      {/* 원본 전자계약서 (세움 전산 계약서) */}
+      {/* 원본 전자계약서 (세움 전산 계약서) — 설계OS 에서는 보기 전용 */}
       <div className="mt-6 flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-slate-800">원본 전자계약서</p>
+        <p className="text-sm font-semibold text-slate-800">
+          원본 전자계약서{" "}
+          <span className="ml-1 rounded bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-500">
+            🔒 보기 전용
+          </span>
+        </p>
         <a
           href={originUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-brand-700"
         >
-          📄 새 탭에서 열기
+          📄 새 탭에서 열기(수정)
         </a>
       </div>
-      <Card className="mt-2 overflow-hidden p-0">
+      {/* 보기 전용: iframe 은 pointer-events 차단(수정 불가), 스크롤은 바깥 래퍼로 */}
+      <div
+        className="mt-2 overflow-y-auto rounded-xl border border-slate-200 bg-white"
+        style={{ maxHeight: "calc(100vh - 12rem)" }}
+      >
         <iframe
           src={originUrl}
-          title="전자계약서 원본"
+          title="전자계약서 원본 (보기 전용)"
+          scrolling="no"
           className="w-full"
-          style={{ height: "calc(100vh - 14rem)", minHeight: 700, border: "none" }}
+          style={{ height: 2800, border: "none", pointerEvents: "none" }}
           loading="lazy"
         />
-      </Card>
+      </div>
       <p className="mt-2 text-xs text-slate-400">
-        원본이 안 보이면(로그인 필요 등) 위 “새 탭에서 열기” 를 눌러 세움 계약서에서 확인하세요.
+        설계OS 에서는 <b>보기 전용</b> 입니다. 수정은 위 “새 탭에서 열기(수정)” 로 세움
+        계약서에서 진행하세요. (원본이 안 보이면 로그인 필요)
       </p>
 
       {/* 협의 도면 / 시공도면 업로드 */}
