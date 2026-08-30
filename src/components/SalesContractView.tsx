@@ -169,7 +169,7 @@ function OptionChips({ options }: { options: Record<string, unknown> }) {
     ([, o]) => o && typeof o === "object" && isEnabled((o as Record<string, unknown>).enabled),
   );
   if (on.length === 0) {
-    return <span className="text-sm text-slate-400">선택된 옵션 없음</span>;
+    return <span className="text-base text-slate-400">선택된 옵션 없음</span>;
   }
   return (
     <div className="flex flex-wrap gap-1.5">
@@ -179,7 +179,7 @@ function OptionChips({ options }: { options: Record<string, unknown> }) {
         return (
           <span
             key={k}
-            className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700"
+            className="rounded-full bg-brand-50 px-2.5 py-1 text-sm font-medium text-brand-700"
           >
             {label(k)}
             {hasP ? ` · ${p}평` : ""}
@@ -258,8 +258,8 @@ function Fields({
     >
       {entries.map(([key, val]) => (
         <div key={key}>
-          <dt className="text-xs font-medium text-slate-400">{label(key)}</dt>
-          <dd className="mt-0.5 text-sm">
+          <dt className="text-sm font-medium text-slate-400">{label(key)}</dt>
+          <dd className="mt-0.5 text-base">
             {key === "options" && val && typeof val === "object" && !Array.isArray(val) ? (
               <OptionChips options={val as Record<string, unknown>} />
             ) : (
