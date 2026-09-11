@@ -147,6 +147,10 @@ export interface EContract {
   data: unknown;
   /** 진행상태 (data.stage): negotiating(협의중)/completed(계약완료)/delivered(납품완료) 등 */
   stage?: string | null;
+  /** 첨부 도면 수 (data.drawingCount) — 경량 조회용 */
+  drawing_count?: number | string | null;
+  /** 신분증 첨부 수 (data.idCount) — 경량 조회용 */
+  id_count?: number | string | null;
   created_at: string | null;
   updated_at: string | null;
 }
