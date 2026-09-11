@@ -361,6 +361,9 @@ export function econtractToPriorityItem(
     _source: "econtract",
     _href: `/econtracts/${e.id}`,
     _key: `e-${e.id}`,
+    // 전자계약서 첨부파일(도면·신분증) 수 — 있으면 목록에서 바로 열람 버튼 표시
+    _attachCount:
+      (Number(e.drawing_count) || 0) + (Number(e.id_count) || 0),
   };
   return item as unknown as Contract;
 }

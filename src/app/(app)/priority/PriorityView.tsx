@@ -7,6 +7,7 @@ import DesignAssigneeCell from "@/components/DesignAssigneeCell";
 import DesignStatusCell from "@/components/DesignStatusCell";
 import DesignMemoCell from "@/components/DesignMemoCell";
 import DesignReviewCell from "@/components/DesignReviewCell";
+import EContractAttachments from "@/components/EContractAttachments";
 import { formatDate } from "@/lib/format";
 import {
   type Contract,
@@ -509,12 +510,22 @@ export default function PriorityView({
                       </td>
                       <td className={`px-4 py-3 ${tDim}`}>{noteOf(c)}</td>
                       <td className="whitespace-nowrap px-4 py-3">
-                        <span className="flex items-center gap-1.5">
+                        <span
+                          className="flex items-center gap-1.5"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           {isPriorityDone(c) && (
                             <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-medium text-white">
                               작업완료
                             </span>
                           )}
+                          {rec._source === "econtract" &&
+                            Number(rec._attachCount ?? 0) > 0 && (
+                              <EContractAttachments
+                                econtractId={c.id}
+                                count={Number(rec._attachCount)}
+                              />
+                            )}
                           {href && (
                             <button
                               type="button"
