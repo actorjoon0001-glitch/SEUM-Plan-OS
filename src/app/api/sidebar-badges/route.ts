@@ -9,8 +9,10 @@ import {
   buildAssigneeMap,
   buildDesignQueue,
   effectiveAssignee,
+  effectiveStatus,
 } from "@/lib/priority";
 import { FIRM_TABLE } from "@/lib/partners";
+import { MEMBERS } from "@/lib/members";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +38,19 @@ export async function GET() {
         .filter((v): v is string => Boolean(v)),
     };
 
+    // 설계 담당자별 진행 건수(완료 제외) + 설계 완료 건수
+    const members: Record<string, { count: number }> = {};
+    for (const m of MEMBERS) {
+      members[m.slug] = {
+        count: queue.filter(
+          (c) => effectiveAssignee(c) === m.name && effectiveStatus(c) !== "완료",
+        ).length,
+      };
+    }
+    const done = {
+      count: queue.filter((c) => effectiveStatus(c) === "완료").length,
+    };
+
     const firmEntries = await Promise.all(
       Object.entries(FIRM_TABLE).map(async ([slug, table]) => {
         const res = await getPartnerSubmissions(table);
@@ -50,7 +65,12 @@ export async function GET() {
       }),
     );
 
-    return NextResponse.json({ priority, ...Object.fromEntries(firmEntries) });
+    return NextResponse.json({
+      priority,
+      members,
+      done,
+      ...Object.fromEntries(firmEntries),
+    });
   } catch {
     return NextResponse.json({});
   }
