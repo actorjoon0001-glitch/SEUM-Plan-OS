@@ -23,6 +23,8 @@ export default function Sidebar({
   const [badges, setBadges] = useState<
     Record<string, { newCount: number; unassigned: number }>
   >({});
+  // 설계 담당자/설계 완료 건수 배지 (member:{slug}, done)
+  const [counts, setCounts] = useState<Record<string, number>>({});
   useEffect(() => {
     let alive = true;
     // nav 경로 → 배지 key
@@ -34,11 +36,29 @@ export default function Sidebar({
     const currentKey = keyOf(pathname);
     fetch("/api/sidebar-badges")
       .then((r) => r.json())
-      .then((data: Record<string, { unassigned: number; ts: string[] }>) => {
+      .then((data: Record<string, unknown>) => {
         if (!alive || !data || typeof data !== "object") return;
         const out: Record<string, { newCount: number; unassigned: number }> = {};
-        for (const [key, info] of Object.entries(data)) {
-          const ts = info?.ts ?? [];
+        const cnt: Record<string, number> = {};
+        for (const [key, raw] of Object.entries(data)) {
+          // 설계 담당자별 건수
+          if (key === "members" && raw && typeof raw === "object") {
+            for (const [slug, m] of Object.entries(
+              raw as Record<string, { count?: number }>,
+            )) {
+              cnt[`member:${slug}`] = m?.count ?? 0;
+            }
+            continue;
+          }
+          // 설계 완료 건수
+          if (key === "done") {
+            cnt["done"] = (raw as { count?: number })?.count ?? 0;
+            continue;
+          }
+          // priority + 협력사 슬러그 ({ unassigned, ts })
+          const info = raw as { unassigned?: number; ts?: string[] };
+          if (!info || !Array.isArray(info.ts)) continue;
+          const ts = info.ts;
           const maxTs = ts.reduce((a, b) => (b > a ? b : a), "");
           let baseline = "";
           try {
@@ -59,15 +79,24 @@ export default function Sidebar({
             baseline = maxTs;
           }
           const newCount = ts.filter((t) => t > baseline).length;
-          out[key] = { newCount, unassigned: info?.unassigned ?? 0 };
+          out[key] = { newCount, unassigned: info.unassigned ?? 0 };
         }
         setBadges(out);
+        setCounts(cnt);
       })
       .catch(() => {});
     return () => {
       alive = false;
     };
   }, [pathname]);
+
+  // nav href → 설계 담당자/설계 완료 건수 (없으면 null)
+  function countInfo(href: string): number | null {
+    const m = href.match(/^\/tasks\/([a-z]+)$/);
+    if (!m) return null;
+    const key = m[1] === "done" ? "done" : `member:${m[1]}`;
+    return key in counts ? counts[key] : null;
+  }
 
   // nav href → 배지 정보 (없으면 null)
   function badgeInfo(
@@ -158,6 +187,22 @@ export default function Sidebar({
                     </svg>
                   )}
                   <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                  {(() => {
+                    const cnt = countInfo(item.href);
+                    if (cnt === null) return null;
+                    return (
+                      <span
+                        className={`ml-1 inline-flex min-w-[1.25rem] shrink-0 items-center justify-center rounded-full px-1.5 py-0 text-[10px] font-bold leading-[1.5] ${
+                          cnt > 0
+                            ? "bg-brand-500 text-white"
+                            : "bg-slate-200 text-slate-500"
+                        }`}
+                        title="담당 건수"
+                      >
+                        {cnt}
+                      </span>
+                    );
+                  })()}
                   {(() => {
                     const info = badgeInfo(item.href);
                     if (!info) return null;
