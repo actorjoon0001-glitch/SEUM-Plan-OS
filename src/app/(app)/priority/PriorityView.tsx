@@ -18,6 +18,8 @@ import {
   TYPE_LABEL,
   TYPE_NOTE,
   TYPE_BADGE,
+  DESIGN_STATUS_OPTIONS,
+  designStatusTone,
   effectiveAssignee,
   effectiveStatus,
   effectiveApproved,
@@ -40,19 +42,23 @@ const STAT_TONE: Record<string, string> = {
   amber: "border-amber-200 bg-amber-50 text-amber-700",
 };
 
-/** 상태 요약 칩 (라벨 + 건수) */
+/** 상태 요약 칩 (라벨 + 건수). tone 키 또는 직접 클래스(cls) 지정 */
 function StatChip({
   label,
   value,
-  tone,
+  tone = "slate",
+  cls,
 }: {
   label: string;
   value: number;
-  tone: keyof typeof STAT_TONE;
+  tone?: keyof typeof STAT_TONE;
+  cls?: string;
 }) {
   return (
     <div
-      className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 ${STAT_TONE[tone]}`}
+      className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 ${
+        cls ?? STAT_TONE[tone]
+      }`}
     >
       <span className="text-xs font-medium">{label}</span>
       <span className="text-sm font-bold tabular-nums">{value}</span>
@@ -131,26 +137,21 @@ export default function PriorityView({
   const active = useMemo(() => base.filter((c) => !isPriorityDone(c)), [base]);
   const done = useMemo(() => base.filter((c) => isPriorityDone(c)), [base]);
 
-  // 설계진행 상태 · 검토자 승인 요약 (현재 필터 기준)
+  // 설계진행 상태(단계별) · 검토자 승인 요약 (현재 필터 기준)
   const stats = useMemo(() => {
-    let notStarted = 0;
-    let complete = 0;
+    const known = new Set<string>(DESIGN_STATUS_OPTIONS);
+    const byStatus: Record<string, number> = {};
+    for (const s of DESIGN_STATUS_OPTIONS) byStatus[s] = 0;
+    let etc = 0;
     let approved = 0;
     for (const c of base) {
       const s = effectiveStatus(c);
-      if (s === "완료") complete += 1;
-      else if (s === "미착수") notStarted += 1;
+      if (known.has(s)) byStatus[s] += 1;
+      else etc += 1; // 옛 세움os 값(설계 중·협의 중 등)
       if (effectiveApproved(c)) approved += 1;
     }
     const total = base.length;
-    return {
-      total,
-      notStarted,
-      inProgress: total - notStarted - complete, // 나머지(설계 중·협의 중 등)
-      complete,
-      approved,
-      pending: total - approved,
-    };
+    return { total, byStatus, etc, approved, pending: total - approved };
   }, [base]);
 
   // 탭 카운트
@@ -294,12 +295,18 @@ export default function PriorityView({
         </span>
       </div>
 
-      {/* 상태 요약 (설계진행 · 검토자 승인) */}
+      {/* 상태 요약 (설계진행 단계별 · 검토자 승인) */}
       <div className="flex flex-wrap items-stretch gap-2">
         <StatChip label="전체" value={stats.total} tone="slate" />
-        <StatChip label="미착수" value={stats.notStarted} tone="slate" />
-        <StatChip label="진행중" value={stats.inProgress} tone="blue" />
-        <StatChip label="완료" value={stats.complete} tone="emerald" />
+        {DESIGN_STATUS_OPTIONS.map((s) => (
+          <StatChip
+            key={s}
+            label={s}
+            value={stats.byStatus[s]}
+            cls={designStatusTone(s)}
+          />
+        ))}
+        {stats.etc > 0 && <StatChip label="기타" value={stats.etc} tone="slate" />}
         <span className="mx-1 self-center text-slate-200">|</span>
         <StatChip label="검토자 승인" value={stats.approved} tone="teal" />
         <StatChip label="승인 대기" value={stats.pending} tone="amber" />

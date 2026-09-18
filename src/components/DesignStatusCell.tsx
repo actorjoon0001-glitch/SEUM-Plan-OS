@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { DESIGN_STATUS_OPTIONS } from "@/lib/priority";
+import { DESIGN_STATUS_OPTIONS, designStatusTone } from "@/lib/priority";
 
 /**
  * 설계진행 상태 드롭박스 (우선순위 표).
@@ -24,18 +24,11 @@ export default function DesignStatusCell({
     "idle",
   );
 
-  // 3개 옵션에 없는 기존 상태(협의 중 등)도 사라지지 않게 옵션으로 추가
+  // 옵션에 없는 기존 상태(설계 중·협의 중 등)도 사라지지 않게 옵션으로 추가
   const extra =
     value && !DESIGN_STATUS_OPTIONS.includes(value as never) ? value : null;
 
-  const color =
-    value === "완료"
-      ? "border-emerald-300 bg-emerald-50 text-emerald-700"
-      : value === "설계 중"
-        ? "border-blue-300 bg-blue-50 text-blue-700"
-        : value === "미착수"
-          ? "border-slate-300 bg-slate-50 text-slate-600"
-          : "border-slate-200 bg-white text-slate-600";
+  const color = designStatusTone(value);
 
   async function onChange(next: string) {
     setValue(next);
