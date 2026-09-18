@@ -8,8 +8,36 @@
 import type { Contract, EContract } from "@/types";
 import { designOwner, designStatusLabel } from "@/lib/contract";
 
-/** 설계진행 상태 드롭박스 옵션 (미착수 / 설계 중 / 완료) */
-export const DESIGN_STATUS_OPTIONS = ["미착수", "설계 중", "완료"] as const;
+/**
+ * 설계진행 상태 드롭박스 옵션 — 설계팀 실제 업무 파이프라인.
+ * 미착수 → 영업팀협의 → 도면작업 → 건축사전달 → 본부장검토 → 완료 (+ 보류)
+ * ("완료" = 설계 작업 완료 → '설계 완료' 화면으로 이동, 이후 검토자(김민석) 승인은 별도)
+ */
+export const DESIGN_STATUS_OPTIONS = [
+  "미착수",
+  "영업팀협의",
+  "도면작업",
+  "건축사전달",
+  "본부장검토",
+  "완료",
+  "보류",
+] as const;
+
+/** 상태별 색상 (칩·드롭박스 공용 tailwind 클래스) */
+export const DESIGN_STATUS_TONE: Record<string, string> = {
+  미착수: "border-slate-300 bg-slate-50 text-slate-600",
+  영업팀협의: "border-violet-300 bg-violet-50 text-violet-700",
+  도면작업: "border-blue-300 bg-blue-50 text-blue-700",
+  건축사전달: "border-teal-300 bg-teal-50 text-teal-700",
+  본부장검토: "border-amber-300 bg-amber-50 text-amber-700",
+  완료: "border-emerald-300 bg-emerald-50 text-emerald-700",
+  보류: "border-rose-300 bg-rose-50 text-rose-700",
+};
+
+/** 상태 tone (없으면 중립) */
+export function designStatusTone(status: string): string {
+  return DESIGN_STATUS_TONE[status] ?? "border-slate-200 bg-white text-slate-600";
+}
 
 /** 배정 매핑 1건 (design_assignees) */
 export interface AssignRecord {
