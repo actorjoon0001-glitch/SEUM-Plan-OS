@@ -351,28 +351,44 @@ export default function PriorityView({
     );
   }
 
-  // 월별 그룹 (계약일 YYYY-MM), 최신 월 먼저
-  const monthGroups = useMemo(() => {
-    const groups = new Map<string, Contract[]>();
+  // 전시장별 → 월별 그룹 (전시장 이름순 · 월은 최신 먼저)
+  const showroomGroups = useMemo(() => {
+    const byShow = new Map<string, Contract[]>();
     for (const c of list) {
-      const key = c.contract_date?.slice(0, 7) || "unknown";
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key)!.push(c);
+      const sr = showroomOf(c) || "-";
+      if (!byShow.has(sr)) byShow.set(sr, []);
+      byShow.get(sr)!.push(c);
     }
-    return [...groups.keys()]
+    return [...byShow.keys()]
       .sort((a, b) => {
-        if (a === "unknown") return 1;
-        if (b === "unknown") return -1;
-        return b.localeCompare(a);
+        if (a === "-") return 1;
+        if (b === "-") return -1;
+        return a.localeCompare(b, "ko");
       })
-      .map((key) => ({
-        key,
-        label:
-          key === "unknown"
-            ? "계약일 미정"
-            : `${key.slice(0, 4)}년 ${Number(key.slice(5, 7))}월`,
-        items: groups.get(key) as Contract[],
-      }));
+      .map((sr) => {
+        const items = byShow.get(sr) as Contract[];
+        const byMonth = new Map<string, Contract[]>();
+        for (const c of items) {
+          const mk = c.contract_date?.slice(0, 7) || "unknown";
+          if (!byMonth.has(mk)) byMonth.set(mk, []);
+          byMonth.get(mk)!.push(c);
+        }
+        const months = [...byMonth.keys()]
+          .sort((a, b) => {
+            if (a === "unknown") return 1;
+            if (b === "unknown") return -1;
+            return b.localeCompare(a);
+          })
+          .map((mk) => ({
+            key: mk,
+            label:
+              mk === "unknown"
+                ? "계약일 미정"
+                : `${mk.slice(0, 4)}년 ${Number(mk.slice(5, 7))}월`,
+            items: byMonth.get(mk) as Contract[],
+          }));
+        return { showroom: sr, count: items.length, months };
+      });
   }, [list]);
 
   return (
@@ -565,19 +581,35 @@ export default function PriorityView({
               ) : (
                 (() => {
                   let n = 0;
-                  return monthGroups.map((g) => (
-                    <Fragment key={g.key}>
-                      <tr className="border-b border-slate-200 bg-slate-100/80">
-                        <td colSpan={14} className="px-4 py-2">
-                          <span className="text-sm font-bold text-slate-700">
-                            {g.label}
+                  return showroomGroups.map((sg) => (
+                    <Fragment key={sg.showroom}>
+                      {/* 전시장 헤더 */}
+                      <tr className="border-y-2 border-brand-200 bg-brand-50">
+                        <td colSpan={14} className="px-4 py-2.5">
+                          <span className="text-sm font-bold text-brand-700">
+                            🏬 {sg.showroom}
                           </span>
-                          <span className="ml-2 text-xs font-medium text-slate-400">
-                            {g.items.length}건
+                          <span className="ml-2 text-xs font-medium text-brand-400">
+                            {sg.count}건
                           </span>
                         </td>
                       </tr>
-                      {g.items.map((c) => renderRow(c, (n += 1)))}
+                      {sg.months.map((mg) => (
+                        <Fragment key={`${sg.showroom}-${mg.key}`}>
+                          {/* 월 헤더 */}
+                          <tr className="border-b border-slate-200 bg-slate-100/80">
+                            <td colSpan={14} className="px-4 py-1.5 pl-8">
+                              <span className="text-sm font-semibold text-slate-600">
+                                {mg.label}
+                              </span>
+                              <span className="ml-2 text-xs font-medium text-slate-400">
+                                {mg.items.length}건
+                              </span>
+                            </td>
+                          </tr>
+                          {mg.items.map((c) => renderRow(c, (n += 1)))}
+                        </Fragment>
+                      ))}
                     </Fragment>
                   ));
                 })()
