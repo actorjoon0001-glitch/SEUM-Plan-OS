@@ -89,11 +89,11 @@ export default function DashboardPage() {
         </p>
       ) : (
         <div className="space-y-8">
-          {/* 설계팀 우선순위 */}
+          {/* 작업현황 */}
           <section>
             <div className="mb-3 flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
-                <span aria-hidden>⭐</span> 설계팀 우선순위
+                <span aria-hidden>⭐</span> 작업현황
               </h2>
               <Link
                 href="/priority"

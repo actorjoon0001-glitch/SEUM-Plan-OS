@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/Card";
 import DesignAssigneeCell from "@/components/DesignAssigneeCell";
@@ -222,6 +222,159 @@ export default function PriorityView({
   const selectCls =
     "rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100";
 
+  // 목록 행 1개 렌더 (월별 그룹에서 재사용)
+  function renderRow(c: Contract, displayNum: number) {
+    const rec = c as unknown as Record<string, unknown>;
+    const tk = projectTypeKey(c);
+    const href =
+      (rec._href as string | undefined) ??
+      (c.local_id ? `/contracts/${encodeURIComponent(c.local_id)}` : undefined);
+    const eco = rec._source === "econtract" || hasEcontract(c);
+    const partner = rec._hasPartner === true;
+    // 전자계약 건은 텍스트를 초록으로 (수기=검정과 구분)
+    const t = eco ? "text-emerald-700" : "text-slate-600";
+    const tStrong = eco ? "text-emerald-800" : "text-slate-800";
+    const tDim = eco ? "text-emerald-600" : "text-slate-400";
+    // 행 강조: 전자계약=초록 / 협력사 인허가=앰버
+    const rowAccent = eco
+      ? "bg-emerald-50/70 border-l-[3px] border-l-emerald-400"
+      : partner
+        ? "bg-amber-50/70 border-l-[3px] border-l-amber-400"
+        : "";
+    return (
+      <tr
+        key={(rec._key as string) ?? c.id}
+        onClick={href ? () => router.push(href) : undefined}
+        className={`border-b border-slate-50 ${
+          href ? "cursor-pointer hover:bg-slate-50" : ""
+        } ${rowAccent}`}
+      >
+        <td className={`px-4 py-3 ${tDim}`}>{displayNum}</td>
+        <td className={`whitespace-nowrap px-4 py-3 ${t}`}>
+          {formatDate(c.contract_date)}
+        </td>
+        <td className="whitespace-nowrap px-4 py-3">
+          <span className="inline-flex items-center gap-1">
+            <span
+              className={`inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${TYPE_BADGE[tk]}`}
+            >
+              {TYPE_LABEL[tk]}
+            </span>
+            {eco && (
+              <span className="inline-flex whitespace-nowrap items-center gap-0.5 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/30">
+                ⚡ 전자계약
+              </span>
+            )}
+            {partner && (
+              <span className="inline-flex whitespace-nowrap items-center gap-0.5 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/30">
+                🏢 협력사 인허가
+              </span>
+            )}
+          </span>
+        </td>
+        <td className={`px-4 py-3 font-medium ${tStrong}`}>
+          <span className="flex items-center gap-1.5">
+            {c.is_urgent && (
+              <span className="rounded bg-rose-100 px-1 text-[10px] font-bold text-rose-600">
+                긴급
+              </span>
+            )}
+            {c.customer_name ?? "-"}
+          </span>
+        </td>
+        <td className={`px-4 py-3 ${t}`}>{c.model_name ?? "-"}</td>
+        <td className={`whitespace-nowrap px-4 py-3 ${t}`}>{showroomOf(c)}</td>
+        <td className={`px-4 py-3 ${t}`}>{regionOf(c)}</td>
+        <td className={`whitespace-nowrap px-4 py-3 ${t}`}>
+          {c.sales_person ?? "-"}
+        </td>
+        <td
+          className="whitespace-nowrap px-4 py-3"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <DesignAssigneeCell
+            source={sourceOf(c)}
+            refId={c.id}
+            initial={effectiveAssignee(c)}
+          />
+        </td>
+        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+          <DesignStatusCell
+            source={sourceOf(c)}
+            refId={c.id}
+            initial={effectiveStatus(c)}
+          />
+        </td>
+        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+          <DesignMemoCell source={sourceOf(c)} refId={c.id} initial={memoOf(c)} />
+        </td>
+        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+          <DesignReviewCell
+            source={sourceOf(c)}
+            refId={c.id}
+            initial={effectiveApproved(c)}
+          />
+        </td>
+        <td className={`px-4 py-3 ${tDim}`}>{noteOf(c)}</td>
+        <td className="whitespace-nowrap px-4 py-3">
+          <span
+            className="flex items-center gap-1.5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {isPriorityDone(c) && (
+              <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-medium text-white">
+                작업완료
+              </span>
+            )}
+            {rec._source === "econtract" &&
+              Number(rec._attachCount ?? 0) > 0 && (
+                <EContractAttachments
+                  econtractId={c.id}
+                  count={Number(rec._attachCount)}
+                />
+              )}
+            {href && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(href);
+                }}
+                className="rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
+              >
+                {eco ? "전자계약 보기" : "계약 상세"}
+              </button>
+            )}
+          </span>
+        </td>
+      </tr>
+    );
+  }
+
+  // 월별 그룹 (계약일 YYYY-MM), 최신 월 먼저
+  const monthGroups = useMemo(() => {
+    const groups = new Map<string, Contract[]>();
+    for (const c of list) {
+      const key = c.contract_date?.slice(0, 7) || "unknown";
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(c);
+    }
+    return [...groups.keys()]
+      .sort((a, b) => {
+        if (a === "unknown") return 1;
+        if (b === "unknown") return -1;
+        return b.localeCompare(a);
+      })
+      .map((key) => ({
+        key,
+        label:
+          key === "unknown"
+            ? "계약일 미정"
+            : `${key.slice(0, 4)}년 ${Number(key.slice(5, 7))}월`,
+        items: groups.get(key) as Contract[],
+      }));
+  }, [list]);
+
   return (
     <div className="space-y-4">
       {/* 필터 바 */}
@@ -316,7 +469,7 @@ export default function PriorityView({
       {!reviewMode && (
       <Card className="p-4">
         <p className="mb-3 text-sm font-semibold text-slate-800">
-          우선순위 진행 현황{" "}
+          작업 현황{" "}
           <span className="font-normal text-slate-400">(계약금 수령 건)</span>
         </p>
         <div className="flex flex-wrap gap-2">
@@ -410,146 +563,24 @@ export default function PriorityView({
                   </td>
                 </tr>
               ) : (
-                list.map((c, i) => {
-                  const rec = c as unknown as Record<string, unknown>;
-                  const tk = projectTypeKey(c);
-                  const href =
-                    (rec._href as string | undefined) ??
-                    (c.local_id
-                      ? `/contracts/${encodeURIComponent(c.local_id)}`
-                      : undefined);
-                  const eco = rec._source === "econtract" || hasEcontract(c);
-                  const partner = rec._hasPartner === true;
-                  // 전자계약 건은 텍스트를 초록으로 (수기=검정과 구분)
-                  const t = eco ? "text-emerald-700" : "text-slate-600";
-                  const tStrong = eco ? "text-emerald-800" : "text-slate-800";
-                  const tDim = eco ? "text-emerald-600" : "text-slate-400";
-                  // 행 강조: 전자계약=초록 / 협력사 인허가=앰버
-                  const rowAccent = eco
-                    ? "bg-emerald-50/70 border-l-[3px] border-l-emerald-400"
-                    : partner
-                      ? "bg-amber-50/70 border-l-[3px] border-l-amber-400"
-                      : "";
-                  return (
-                    <tr
-                      key={(rec._key as string) ?? c.id}
-                      onClick={href ? () => router.push(href) : undefined}
-                      className={`border-b border-slate-50 ${
-                        href ? "cursor-pointer hover:bg-slate-50" : ""
-                      } ${rowAccent}`}
-                    >
-                      <td className={`px-4 py-3 ${tDim}`}>{i + 1}</td>
-                      <td className={`whitespace-nowrap px-4 py-3 ${t}`}>
-                        {formatDate(c.contract_date)}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3">
-                        <span className="inline-flex items-center gap-1">
-                          <span
-                            className={`inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${TYPE_BADGE[tk]}`}
-                          >
-                            {TYPE_LABEL[tk]}
+                (() => {
+                  let n = 0;
+                  return monthGroups.map((g) => (
+                    <Fragment key={g.key}>
+                      <tr className="border-b border-slate-200 bg-slate-100/80">
+                        <td colSpan={14} className="px-4 py-2">
+                          <span className="text-sm font-bold text-slate-700">
+                            {g.label}
                           </span>
-                          {eco && (
-                            <span className="inline-flex whitespace-nowrap items-center gap-0.5 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/30">
-                              ⚡ 전자계약
-                            </span>
-                          )}
-                          {partner && (
-                            <span className="inline-flex whitespace-nowrap items-center gap-0.5 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/30">
-                              🏢 협력사 인허가
-                            </span>
-                          )}
-                        </span>
-                      </td>
-                      <td className={`px-4 py-3 font-medium ${tStrong}`}>
-                        <span className="flex items-center gap-1.5">
-                          {c.is_urgent && (
-                            <span className="rounded bg-rose-100 px-1 text-[10px] font-bold text-rose-600">
-                              긴급
-                            </span>
-                          )}
-                          {c.customer_name ?? "-"}
-                        </span>
-                      </td>
-                      <td className={`px-4 py-3 ${t}`}>{c.model_name ?? "-"}</td>
-                      <td className={`whitespace-nowrap px-4 py-3 ${t}`}>{showroomOf(c)}</td>
-                      <td className={`px-4 py-3 ${t}`}>{regionOf(c)}</td>
-                      <td className={`whitespace-nowrap px-4 py-3 ${t}`}>{c.sales_person ?? "-"}</td>
-                      <td
-                        className="whitespace-nowrap px-4 py-3"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <DesignAssigneeCell
-                          source={sourceOf(c)}
-                          refId={c.id}
-                          initial={effectiveAssignee(c)}
-                        />
-                      </td>
-                      <td
-                        className="px-4 py-3"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <DesignStatusCell
-                          source={sourceOf(c)}
-                          refId={c.id}
-                          initial={effectiveStatus(c)}
-                        />
-                      </td>
-                      <td
-                        className="px-4 py-3"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <DesignMemoCell
-                          source={sourceOf(c)}
-                          refId={c.id}
-                          initial={memoOf(c)}
-                        />
-                      </td>
-                      <td
-                        className="px-4 py-3"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <DesignReviewCell
-                          source={sourceOf(c)}
-                          refId={c.id}
-                          initial={effectiveApproved(c)}
-                        />
-                      </td>
-                      <td className={`px-4 py-3 ${tDim}`}>{noteOf(c)}</td>
-                      <td className="whitespace-nowrap px-4 py-3">
-                        <span
-                          className="flex items-center gap-1.5"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {isPriorityDone(c) && (
-                            <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-medium text-white">
-                              작업완료
-                            </span>
-                          )}
-                          {rec._source === "econtract" &&
-                            Number(rec._attachCount ?? 0) > 0 && (
-                              <EContractAttachments
-                                econtractId={c.id}
-                                count={Number(rec._attachCount)}
-                              />
-                            )}
-                          {href && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                router.push(href);
-                              }}
-                              className="rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
-                            >
-                              {eco ? "전자계약 보기" : "계약 상세"}
-                            </button>
-                          )}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })
+                          <span className="ml-2 text-xs font-medium text-slate-400">
+                            {g.items.length}건
+                          </span>
+                        </td>
+                      </tr>
+                      {g.items.map((c) => renderRow(c, (n += 1)))}
+                    </Fragment>
+                  ));
+                })()
               )}
             </tbody>
           </table>
