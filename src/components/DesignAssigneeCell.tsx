@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { MEMBERS } from "@/lib/members";
+import { useUser } from "@/components/UserContext";
 
 /**
  * 설계담당 배정 드롭박스 (우선순위 표).
@@ -19,6 +20,7 @@ export default function DesignAssigneeCell({
   refId: number;
   initial: string | null;
 }) {
+  const { canEdit } = useUser();
   const [value, setValue] = useState(initial ?? "");
   const [state, setState] = useState<"idle" | "saving" | "done" | "error">(
     "idle",
@@ -27,6 +29,21 @@ export default function DesignAssigneeCell({
   // 구성원 목록에 없는 기존 이름(세움os 원본 등)도 드롭박스에 그대로 보이도록 옵션에 추가
   const extra =
     value && !MEMBERS.some((m) => m.name === value) ? value : null;
+
+  // 보기 전용(영업팀 등): 텍스트만 표시
+  if (!canEdit) {
+    return (
+      <span
+        className={`inline-flex whitespace-nowrap rounded-md px-2 py-1 text-sm ${
+          value
+            ? "bg-brand-50 font-medium text-brand-700"
+            : "text-slate-400"
+        }`}
+      >
+        {value || "미지정"}
+      </span>
+    );
+  }
 
   async function onChange(next: string) {
     setValue(next);

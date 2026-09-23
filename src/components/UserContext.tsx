@@ -7,11 +7,14 @@ import type { Employee } from "@/types";
 export interface CurrentUser {
   session: Session | null;
   employee: Employee | null;
+  /** 편집(수정) 권한 여부 — false 면 보기 전용 */
+  canEdit: boolean;
 }
 
 const UserContext = createContext<CurrentUser>({
   session: null,
   employee: null,
+  canEdit: false,
 });
 
 export function UserProvider({

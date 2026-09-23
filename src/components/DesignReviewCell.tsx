@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useUser } from "@/components/UserContext";
 
 /**
  * 검토자 승인 토글 (우선순위/검토자 표).
@@ -18,10 +19,26 @@ export default function DesignReviewCell({
   refId: number;
   initial: boolean;
 }) {
+  const { canEdit } = useUser();
   const [approved, setApproved] = useState(initial);
   const [state, setState] = useState<"idle" | "saving" | "done" | "error">(
     "idle",
   );
+
+  // 보기 전용(영업팀 등): 승인 상태 배지만 표시(클릭 불가)
+  if (!canEdit) {
+    return (
+      <span
+        className={`inline-flex whitespace-nowrap items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${
+          approved
+            ? "bg-emerald-50 text-emerald-700 ring-emerald-600/20"
+            : "bg-slate-100 text-slate-500 ring-slate-300"
+        }`}
+      >
+        {approved ? "✓ 승인" : "미승인"}
+      </span>
+    );
+  }
 
   async function toggle() {
     const next = !approved;

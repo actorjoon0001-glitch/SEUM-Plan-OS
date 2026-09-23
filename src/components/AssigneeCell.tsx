@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { MEMBERS } from "@/lib/members";
+import { useUser } from "@/components/UserContext";
 
 /**
  * 협력사 제출 자료의 설계 담당자 드롭박스.
@@ -18,6 +19,7 @@ export default function AssigneeCell({
   id: number;
   initial: string;
 }) {
+  const { canEdit } = useUser();
   const [value, setValue] = useState(initial ?? "");
   const [state, setState] = useState<"idle" | "saving" | "done" | "error">(
     "idle",
@@ -26,6 +28,19 @@ export default function AssigneeCell({
   // 구성원 목록에 없는 기존 이름도 옵션으로 유지
   const extra =
     value && !MEMBERS.some((m) => m.name === value) ? value : null;
+
+  // 보기 전용(영업팀 등)
+  if (!canEdit) {
+    return (
+      <span
+        className={`inline-flex whitespace-nowrap rounded-md px-2 py-1 text-sm ${
+          value ? "bg-brand-50 font-medium text-brand-700" : "text-slate-400"
+        }`}
+      >
+        {value || "미지정"}
+      </span>
+    );
+  }
 
   async function onChange(next: string) {
     setValue(next);
