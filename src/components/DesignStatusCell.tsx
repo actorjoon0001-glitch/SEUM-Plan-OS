@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { DESIGN_STATUS_OPTIONS, designStatusTone } from "@/lib/priority";
+import { useUser } from "@/components/UserContext";
 
 /**
  * 설계진행 상태 드롭박스 (우선순위 표).
@@ -19,6 +20,7 @@ export default function DesignStatusCell({
   refId: number;
   initial: string;
 }) {
+  const { canEdit } = useUser();
   const [value, setValue] = useState(initial);
   const [state, setState] = useState<"idle" | "saving" | "done" | "error">(
     "idle",
@@ -29,6 +31,17 @@ export default function DesignStatusCell({
     value && !DESIGN_STATUS_OPTIONS.includes(value as never) ? value : null;
 
   const color = designStatusTone(value);
+
+  // 보기 전용(영업팀 등): 상태 배지만 표시
+  if (!canEdit) {
+    return (
+      <span
+        className={`inline-flex whitespace-nowrap rounded-md border px-2 py-1 text-sm ${color}`}
+      >
+        {value || "-"}
+      </span>
+    );
+  }
 
   async function onChange(next: string) {
     setValue(next);

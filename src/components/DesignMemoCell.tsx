@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useUser } from "@/components/UserContext";
 
 /**
  * 설계 메모 입력 셀 (우선순위 표).
@@ -17,11 +18,21 @@ export default function DesignMemoCell({
   refId: number;
   initial: string;
 }) {
+  const { canEdit } = useUser();
   const [value, setValue] = useState(initial);
   const [saved, setSaved] = useState(initial);
   const [state, setState] = useState<"idle" | "saving" | "done" | "error">(
     "idle",
   );
+
+  // 보기 전용(영업팀 등): 메모 텍스트만 표시
+  if (!canEdit) {
+    return (
+      <span className="block max-w-[12rem] truncate text-sm text-slate-600">
+        {value || "-"}
+      </span>
+    );
+  }
 
   async function save() {
     const v = value.trim();

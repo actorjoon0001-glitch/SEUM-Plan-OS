@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
@@ -9,6 +9,8 @@ import Sidebar from "@/components/Sidebar";
 import LoginScreen from "@/components/LoginScreen";
 import { UserProvider } from "@/components/UserContext";
 import { recordLogin } from "@/lib/loginLog";
+import { isAdmin } from "@/lib/admin";
+import { computeCanEdit } from "@/lib/permissions";
 import type { Employee } from "@/types";
 
 /**
@@ -22,6 +24,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
   const [employee, setEmployee] = useState<Employee | null>(null);
+  const [teamPerms, setTeamPerms] = useState<Map<string, boolean>>(new Map());
 
   // 넓은 표/임베드가 있는 페이지는 전체 폭 사용 (수기 계약서 · 우선순위 · 전자계약서)
   const fullWidth =
@@ -80,6 +83,35 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     })();
   }, [session]);
 
+  // 팀별 편집 권한(plan_os_team_perms) 로드
+  useEffect(() => {
+    if (!session) {
+      setTeamPerms(new Map());
+      return;
+    }
+    const supabase = createClient();
+    supabase
+      .from("plan_os_team_perms")
+      .select("team, can_edit")
+      .then(({ data }) => {
+        const m = new Map<string, boolean>();
+        for (const r of (data ?? []) as { team: string; can_edit: boolean }[]) {
+          if (r.team) m.set(r.team, !!r.can_edit);
+        }
+        setTeamPerms(m);
+      });
+  }, [session]);
+
+  const canEdit = useMemo(
+    () =>
+      computeCanEdit(
+        isAdmin(session?.user.email),
+        employee?.team ?? null,
+        teamPerms,
+      ),
+    [session, employee, teamPerms],
+  );
+
   // 초기 세션 확인 중
   if (!ready) {
     return (
@@ -95,7 +127,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <UserProvider value={{ session, employee }}>
+    <UserProvider value={{ session, employee, canEdit }}>
       <div className="flex h-screen overflow-hidden">
         <Sidebar
           userName={employee?.name}
