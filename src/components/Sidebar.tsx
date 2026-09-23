@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { navSections } from "@/lib/navigation";
+import { isAdmin } from "@/lib/admin";
 import LogoutButton from "@/components/LogoutButton";
 
 export default function Sidebar({
@@ -110,6 +111,12 @@ export default function Sidebar({
   const displayName = userName?.trim() || "세움 설계팀";
   const initial = displayName.charAt(0);
 
+  // 관리자 전용 메뉴는 관리자에게만 노출
+  const admin = isAdmin(userEmail);
+  const sections = navSections
+    .map((s) => ({ ...s, items: s.items.filter((it) => !it.adminOnly || admin) }))
+    .filter((s) => s.items.length > 0);
+
   function isActive(href: string): boolean {
     const [path, qs] = href.split("?");
     const wantType = new URLSearchParams(qs).get("type");
@@ -136,7 +143,7 @@ export default function Sidebar({
 
       {/* 네비게이션 */}
       <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-2">
-        {navSections.map((section, i) => (
+        {sections.map((section, i) => (
           <div key={section.title ?? `section-${i}`} className="space-y-1">
             {section.title && (
               <p className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">

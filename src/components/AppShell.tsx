@@ -8,6 +8,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import Sidebar from "@/components/Sidebar";
 import LoginScreen from "@/components/LoginScreen";
 import { UserProvider } from "@/components/UserContext";
+import { recordLogin } from "@/lib/loginLog";
 import type { Employee } from "@/types";
 
 /**
@@ -43,7 +44,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     });
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
+    } = supabase.auth.onAuthStateChange((event, s) => {
+      setSession(s);
+      // 실제 로그인 시 로그인 기록 남김
+      if (event === "SIGNED_IN" && s?.user?.email) {
+        recordLogin(s.user.email, s.access_token);
+      }
+    });
     return () => subscription.unsubscribe();
   }, []);
 
