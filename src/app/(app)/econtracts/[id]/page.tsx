@@ -77,41 +77,22 @@ export default async function EContractDetailPage({
         </div>
       </Card>
 
-      {/* 원본 전자계약서 (세움 전산 계약서) — 설계OS 에서는 보기 전용 */}
-      <div className="mt-6 flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-slate-800">
-          원본 전자계약서{" "}
-          <span className="ml-1 rounded bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-500">
-            🔒 보기 전용
-          </span>
+      {/* 계약서 내용 — 설계OS 자체 데이터로 렌더(원본 시스템 로그인 불필요) */}
+      <EContractDoc data={e.data} />
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <p className="text-xs text-slate-400">
+          설계OS 에서는 <b>보기 전용</b> 입니다. 서명된 원본(PDF)·수정은 세움 계약서
+          시스템에서 진행하세요.
         </p>
         <a
           href={originUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-brand-700"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
         >
-          📄 새 탭에서 열기(수정)
+          📄 원본 계약서 열기(세움os 로그인)
         </a>
       </div>
-      {/* 보기 전용: iframe 은 pointer-events 차단(수정 불가), 스크롤은 바깥 래퍼로 */}
-      <div
-        className="mt-2 overflow-y-auto rounded-xl border border-slate-200 bg-white"
-        style={{ maxHeight: "calc(100vh - 12rem)" }}
-      >
-        <iframe
-          src={originUrl}
-          title="전자계약서 원본 (보기 전용)"
-          scrolling="no"
-          className="w-full"
-          style={{ height: 1900, border: "none", pointerEvents: "none" }}
-          loading="lazy"
-        />
-      </div>
-      <p className="mt-2 text-xs text-slate-400">
-        설계OS 에서는 <b>보기 전용</b> 입니다. 수정은 위 “새 탭에서 열기(수정)” 로 세움
-        계약서에서 진행하세요. (원본이 안 보이면 로그인 필요)
-      </p>
 
       {/* 협의 도면 / 시공도면 업로드 */}
       <div className="mt-6 space-y-4">
@@ -160,13 +141,6 @@ export default async function EContractDetailPage({
         )}
       </div>
 
-      {/* 간략 내용 (예비) */}
-      <details className="mt-6">
-        <summary className="cursor-pointer text-sm font-medium text-slate-500">
-          간략 내용 보기
-        </summary>
-        <EContractDoc data={e.data} />
-      </details>
     </>
   );
 }

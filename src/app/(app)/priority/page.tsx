@@ -69,7 +69,7 @@ export default async function PriorityPage({
   return (
     <>
       <PageHeader
-        title="작업현황"
+        title="설계팀 작업현황"
         description="설계담당 배정 대기 목록입니다. 월별로 계약 건을 확인하세요. 담당자를 지정하면 해당 팀원 페이지로 이동합니다. (수기 계약금 수령 건 + 전자계약 계약완료 건)"
       />
       <ConnectionNotice configured={res.configured} error={res.error} />

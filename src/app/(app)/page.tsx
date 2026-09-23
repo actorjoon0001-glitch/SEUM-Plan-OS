@@ -93,7 +93,7 @@ export default function DashboardPage() {
           <section>
             <div className="mb-3 flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
-                <span aria-hidden>⭐</span> 작업현황
+                <span aria-hidden>⭐</span> 설계팀 작업현황
               </h2>
               <Link
                 href="/priority"
