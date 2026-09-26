@@ -1,13 +1,16 @@
 "use client";
 
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/Card";
 import DesignAssigneeCell from "@/components/DesignAssigneeCell";
-import DesignStatusCell from "@/components/DesignStatusCell";
+import DesignStatusCell, {
+  type StatusLogEntry,
+} from "@/components/DesignStatusCell";
 import DesignMemoCell from "@/components/DesignMemoCell";
 import DesignReviewCell from "@/components/DesignReviewCell";
 import EContractAttachments from "@/components/EContractAttachments";
+import { createClient } from "@/lib/supabase/client";
 import { formatDate } from "@/lib/format";
 import {
   type Contract,
@@ -24,8 +27,6 @@ import {
   effectiveStatus,
   effectiveApproved,
   memoOf,
-  statusChangedBy,
-  statusChangedAt,
   isPriorityDone,
   projectTypeKey,
   regionOf,
@@ -33,6 +34,8 @@ import {
   sortPriority,
   sourceOf,
 } from "@/lib/priority";
+
+const EMPTY_LOG: StatusLogEntry[] = [];
 
 const ALL = "전체";
 
@@ -94,6 +97,35 @@ export default function PriorityView({
       (c.local_id && econtractSet.has(c.local_id)) ||
         (c.customer_name && econtractSet.has(c.customer_name)),
     );
+
+  // 설계진행 상태 변경 이력 (design_status_log) — source:ref_id 별 목록
+  const [logMap, setLogMap] = useState<Map<string, StatusLogEntry[]>>(
+    new Map(),
+  );
+  const loadLog = useCallback(async () => {
+    try {
+      const sb = createClient();
+      const { data } = await sb
+        .from("design_status_log")
+        .select("id, source, ref_id, status, changed_by, changed_at")
+        .order("changed_at", { ascending: false })
+        .limit(5000);
+      const m = new Map<string, StatusLogEntry[]>();
+      for (const r of (data ?? []) as StatusLogEntry[]) {
+        const k = `${r.source}:${r.ref_id}`;
+        const arr = m.get(k);
+        if (arr) arr.push(r);
+        else m.set(k, [r]);
+      }
+      setLogMap(m);
+    } catch {
+      // 테이블 없음 등 → 이력 없음
+    }
+  }, []);
+  useEffect(() => {
+    loadLog();
+  }, [loadLog]);
+
   const [year, setYear] = useState(ALL);
   const [month, setMonth] = useState(ALL);
   const [showroom, setShowroom] = useState(ALL);
@@ -305,8 +337,8 @@ export default function PriorityView({
             source={sourceOf(c)}
             refId={c.id}
             initial={effectiveStatus(c)}
-            changedBy={statusChangedBy(c)}
-            changedAt={statusChangedAt(c)}
+            log={logMap.get(`${sourceOf(c)}:${c.id}`) ?? EMPTY_LOG}
+            onLogChanged={loadLog}
           />
         </td>
         <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
@@ -556,9 +588,9 @@ export default function PriorityView({
 
       {/* 목록 테이블 */}
       <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="max-h-[70vh] overflow-auto">
           <table className="w-full min-w-[1400px] text-sm">
-            <thead>
+            <thead className="sticky top-0 z-10 bg-slate-50">
               <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs text-slate-500">
                 <th className="px-4 py-3 font-medium">#</th>
                 <th className="px-4 py-3 font-medium">계약일</th>

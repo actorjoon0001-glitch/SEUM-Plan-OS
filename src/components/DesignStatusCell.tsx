@@ -6,6 +6,16 @@ import { DESIGN_STATUS_OPTIONS, designStatusTone } from "@/lib/priority";
 import { useUser } from "@/components/UserContext";
 import { isAdmin } from "@/lib/admin";
 
+/** 상태 변경 이력 1건 (design_status_log) */
+export interface StatusLogEntry {
+  id: number;
+  source: string;
+  ref_id: number;
+  status: string | null;
+  changed_by: string | null;
+  changed_at: string | null;
+}
+
 /** 변경 시각 표시용 (MM/DD HH:mm) */
 function fmtWhen(ts: string | null): string {
   if (!ts) return "";
@@ -20,27 +30,26 @@ function fmtWhen(ts: string | null): string {
 
 /**
  * 설계진행 상태 드롭박스 (우선순위 표).
- * 선택하면 design_assignees.design_status 에 저장하고, 변경자·시각도 함께 기록한다.
- * 변경 기록은 상태 아래 작게 표시하며, 관리자는 ✕ 로 기록을 삭제할 수 있다.
+ * 선택하면 design_assignees.design_status 에 현재 상태를 저장하고,
+ * design_status_log 에 변경 이력(변경자·시각·상태)을 '추가'로 기록한다(덮어쓰지 않음).
+ * 이력은 상태 아래 누적 표시하며, 관리자는 각 이력을 ✕ 로 삭제할 수 있다.
  */
 export default function DesignStatusCell({
   source,
   refId,
   initial,
-  changedBy = null,
-  changedAt = null,
+  log = [],
+  onLogChanged,
 }: {
   source: "contract" | "econtract";
   refId: number;
   initial: string;
-  changedBy?: string | null;
-  changedAt?: string | null;
+  log?: StatusLogEntry[];
+  onLogChanged?: () => void;
 }) {
   const { canEdit, session, employee } = useUser();
   const admin = isAdmin(session?.user.email);
   const [value, setValue] = useState(initial);
-  const [by, setBy] = useState<string | null>(changedBy);
-  const [at, setAt] = useState<string | null>(changedAt);
   const [state, setState] = useState<"idle" | "saving" | "done" | "error">(
     "idle",
   );
@@ -51,48 +60,55 @@ export default function DesignStatusCell({
 
   const color = designStatusTone(value);
 
-  async function clearRecord() {
-    const prevBy = by;
-    const prevAt = at;
-    setBy(null);
-    setAt(null);
+  // 최신 이력 먼저
+  const entries = [...log].sort((a, b) =>
+    (b.changed_at ?? "").localeCompare(a.changed_at ?? ""),
+  );
+
+  async function deleteEntry(id: number) {
     try {
       const sb = createClient();
-      const { error } = await sb.from("design_assignees").upsert(
-        { source, ref_id: refId, status_changed_by: null, status_changed_at: null },
-        { onConflict: "source,ref_id" },
-      );
+      const { error } = await sb.from("design_status_log").delete().eq("id", id);
       if (error) throw error;
+      onLogChanged?.();
     } catch {
-      setBy(prevBy); // 롤백
-      setAt(prevAt);
+      // 무시(권한 없음 등)
     }
   }
 
-  // 변경 기록 표시 (있을 때)
-  const record = by ? (
-    <span className="mt-0.5 flex items-center gap-1 text-[11px] leading-tight text-slate-400">
-      <span className="truncate">
-        {by}
-        {at ? ` · ${fmtWhen(at)}` : ""}
-      </span>
-      {admin && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            clearRecord();
-          }}
-          title="변경 기록 삭제 (관리자)"
-          className="shrink-0 rounded px-1 text-slate-400 hover:bg-rose-50 hover:text-rose-500"
-        >
-          ✕
-        </button>
-      )}
-    </span>
-  ) : null;
+  // 변경 이력 목록 (누적)
+  const history =
+    entries.length > 0 ? (
+      <div className="mt-0.5 space-y-0.5">
+        {entries.map((e) => (
+          <span
+            key={e.id}
+            className="flex items-center gap-1 text-[11px] leading-tight text-slate-400"
+          >
+            <span className="truncate">
+              {e.changed_by || "?"}
+              {e.changed_at ? ` · ${fmtWhen(e.changed_at)}` : ""}
+              {e.status ? ` → ${e.status}` : ""}
+            </span>
+            {admin && (
+              <button
+                type="button"
+                onClick={(ev) => {
+                  ev.stopPropagation();
+                  deleteEntry(e.id);
+                }}
+                title="이 기록 삭제 (관리자)"
+                className="shrink-0 rounded px-1 text-slate-400 hover:bg-rose-50 hover:text-rose-500"
+              >
+                ✕
+              </button>
+            )}
+          </span>
+        ))}
+      </div>
+    ) : null;
 
-  // 보기 전용(영업팀 등): 상태 배지 + 기록만 표시
+  // 보기 전용(영업팀 등): 상태 배지 + 이력만 표시
   if (!canEdit) {
     return (
       <div className="min-w-0" onClick={(e) => e.stopPropagation()}>
@@ -101,7 +117,7 @@ export default function DesignStatusCell({
         >
           {value || "-"}
         </span>
-        {record}
+        {history}
       </div>
     );
   }
@@ -109,34 +125,25 @@ export default function DesignStatusCell({
   async function onChange(next: string) {
     setValue(next);
     setState("saving");
-    const now = new Date().toISOString();
     const who = employee?.name || session?.user.email || "";
     try {
       const sb = createClient();
-      let { error } = await sb.from("design_assignees").upsert(
-        {
-          source,
-          ref_id: refId,
-          design_status: next,
-          status_changed_by: who || null,
-          status_changed_at: now,
-        },
+      // 1) 현재 상태 저장(필터·집계·라우팅용)
+      const { error } = await sb.from("design_assignees").upsert(
+        { source, ref_id: refId, design_status: next },
         { onConflict: "source,ref_id" },
       );
-      // 추적 컬럼(status_changed_*)이 아직 없으면 상태만 저장(기존 기능 유지)
-      if (error && /column|schema cache|could not find/i.test(error.message)) {
-        ({ error } = await sb.from("design_assignees").upsert(
-          { source, ref_id: refId, design_status: next },
-          { onConflict: "source,ref_id" },
-        ));
-        if (!error) {
-          setState("done");
-          return;
-        }
-      }
       if (error) throw error;
-      setBy(who || null);
-      setAt(now);
+      // 2) 변경 이력 추가(덮어쓰지 않고 누적) — 테이블 없으면 무시
+      try {
+        await sb.from("design_status_log").insert({
+          source,
+          ref_id: refId,
+          status: next,
+          changed_by: who || null,
+        });
+        onLogChanged?.();
+      } catch {}
       setState("done");
     } catch {
       setState("error");
@@ -169,7 +176,7 @@ export default function DesignStatusCell({
           </span>
         )}
       </div>
-      {record}
+      {history}
     </div>
   );
 }
