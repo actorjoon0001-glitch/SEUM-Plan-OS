@@ -302,9 +302,25 @@ export function koShowroom(v: unknown): string {
   return raw;
 }
 
-/** 전시장(쇼룸) 표시 — 계약 컬럼에서 읽어 한글화 */
+/** 전시장 이름 통합(중복 정리) — 같은 전시장을 한 이름으로 */
+const SHOWROOM_CANON: Record<string, string> = {
+  강화: "강화전시장",
+  "강화 전시장": "강화전시장",
+  본사: "본사 전시장",
+  본점: "본사 전시장",
+  본사전시장: "본사 전시장",
+};
+
+function canonShowroom(name: string): string {
+  const t = name.trim();
+  return SHOWROOM_CANON[t] ?? t;
+}
+
+/** 전시장(쇼룸) 표시 — 계약 컬럼에서 읽어 한글화 + 중복 이름 통합 */
 export function showroomOf(c: Contract): string {
-  return koShowroom(pick(c, ["showroom", "showroom_name", "showroom_id"]));
+  return canonShowroom(
+    koShowroom(pick(c, ["showroom", "showroom_name", "showroom_id"])),
+  );
 }
 
 export const TYPE_LABEL: Record<TypeKey, string> = {
