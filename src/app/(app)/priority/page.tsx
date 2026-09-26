@@ -10,10 +10,8 @@ import {
   attachPartnerFlag,
   buildAssigneeMap,
   buildDesignQueue,
-  effectiveAssignee,
   type TabKey,
 } from "@/lib/priority";
-import { MEMBERS } from "@/lib/members";
 import PriorityView from "./PriorityView";
 
 export const dynamic = "force-dynamic";
@@ -46,14 +44,10 @@ export default async function PriorityPage({
 
   const assigneeMap = buildAssigneeMap(ares.data);
 
-  // 설계담당이 팀원(김철환·김성현·안준택·김찬영)으로 지정된 건은
-  // 해당 팀원 페이지로 이동하므로 우선순위(배정 대기) 목록에서는 제외한다.
-  const memberNames = new Set(MEMBERS.map((m) => m.name));
+  // 담당자가 지정돼도 작업현황에는 그대로 남긴다(전체 진행 현황 한눈에).
+  // 팀원 개인 페이지는 이 큐에서 담당자 기준으로 따로 필터한다.
   const queue = attachPartnerFlag(
-    buildDesignQueue(res.data, eres.data, assigneeMap).filter((c) => {
-      const a = effectiveAssignee(c);
-      return !a || !memberNames.has(a);
-    }),
+    buildDesignQueue(res.data, eres.data, assigneeMap),
     ptitles.data,
   );
 
@@ -70,7 +64,7 @@ export default async function PriorityPage({
     <>
       <PageHeader
         title="설계팀 작업현황"
-        description="설계담당 배정 대기 목록입니다. 월별로 계약 건을 확인하세요. 담당자를 지정하면 해당 팀원 페이지로 이동합니다. (수기 계약금 수령 건 + 전자계약 계약완료 건)"
+        description="설계팀 전체 작업 현황입니다. 담당자를 지정해도 목록에 그대로 남습니다. 전시장·월별로 계약 건을 확인하세요. (수기 계약금 수령 건 + 전자계약 계약완료 건)"
       />
       <ConnectionNotice configured={res.configured} error={res.error} />
       <PriorityView
