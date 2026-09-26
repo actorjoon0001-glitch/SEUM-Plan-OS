@@ -353,6 +353,8 @@ export interface DesignAssignee {
   design_status?: string | null;
   memo?: string | null;
   review_done?: boolean | null;
+  status_changed_by?: string | null;
+  status_changed_at?: string | null;
 }
 
 export function getDesignAssignees() {
@@ -360,11 +362,24 @@ export function getDesignAssignees() {
     const sb = await createClient();
     const { data, error } = await sb
       .from("design_assignees")
-      .select("source, ref_id, assignee, design_status, memo, review_done");
+      .select(
+        "source, ref_id, assignee, design_status, memo, review_done, status_changed_by, status_changed_at",
+      );
     if (error) {
-      // 아직 테이블이 없으면 오류 대신 빈 목록으로 처리
-      if (/does not exist|could not find|relation|schema cache/i.test(error.message)) {
-        return [];
+      // 아직 테이블이 없으면 빈 목록
+      if (/does not exist|relation/i.test(error.message)) return [];
+      // status_changed_* 컬럼이 아직 없으면 해당 컬럼 없이 재조회(기존 기능 유지)
+      if (/column|could not find|schema cache/i.test(error.message)) {
+        const retry = await sb
+          .from("design_assignees")
+          .select("source, ref_id, assignee, design_status, memo, review_done");
+        if (retry.error) {
+          if (/does not exist|relation|column|schema cache/i.test(retry.error.message)) {
+            return [];
+          }
+          throw new Error(retry.error.message);
+        }
+        return (retry.data ?? []) as DesignAssignee[];
       }
       throw new Error(error.message);
     }

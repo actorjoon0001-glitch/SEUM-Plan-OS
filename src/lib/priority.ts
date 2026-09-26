@@ -45,6 +45,8 @@ export interface AssignRecord {
   design_status?: string | null;
   memo?: string | null;
   review_done?: boolean | null;
+  status_changed_by?: string | null;
+  status_changed_at?: string | null;
 }
 
 /** design_assignees 행 목록 → source:id 키 맵 */
@@ -56,6 +58,8 @@ export function buildAssigneeMap(
     design_status?: string | null;
     memo?: string | null;
     review_done?: boolean | null;
+    status_changed_by?: string | null;
+    status_changed_at?: string | null;
   }>,
 ): Map<string, AssignRecord> {
   const map = new Map<string, AssignRecord>();
@@ -65,6 +69,8 @@ export function buildAssigneeMap(
       design_status: a.design_status ?? null,
       memo: a.memo ?? null,
       review_done: a.review_done ?? null,
+      status_changed_by: a.status_changed_by ?? null,
+      status_changed_at: a.status_changed_at ?? null,
     });
   }
   return map;
@@ -179,6 +185,18 @@ export function reviewDoneOf(c: Contract): boolean | null {
   return v === true ? true : v === false ? false : null;
 }
 
+/** 설계진행 상태 최종 변경자 (design_assignees.status_changed_by) */
+export function statusChangedBy(c: Contract): string | null {
+  const v = (c as unknown as Record<string, unknown>)._status_by;
+  return v ? String(v) : null;
+}
+
+/** 설계진행 상태 최종 변경 시각 (design_assignees.status_changed_at) */
+export function statusChangedAt(c: Contract): string | null {
+  const v = (c as unknown as Record<string, unknown>)._status_at;
+  return v ? String(v) : null;
+}
+
 /**
  * 표시용 실제 검토자 승인 여부.
  * 1) 설계OS 지정값(review_done) 우선
@@ -221,6 +239,8 @@ export function attachAssignees(
     rec._design_status = r?.design_status ?? null;
     rec._memo = r?.memo ?? null;
     rec._review_done = r?.review_done ?? null;
+    rec._status_by = r?.status_changed_by ?? null;
+    rec._status_at = r?.status_changed_at ?? null;
   }
   return items;
 }
