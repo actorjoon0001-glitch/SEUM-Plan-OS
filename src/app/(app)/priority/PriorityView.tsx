@@ -24,6 +24,8 @@ import {
   effectiveStatus,
   effectiveApproved,
   memoOf,
+  statusChangedBy,
+  statusChangedAt,
   isPriorityDone,
   projectTypeKey,
   regionOf,
@@ -303,6 +305,8 @@ export default function PriorityView({
             source={sourceOf(c)}
             refId={c.id}
             initial={effectiveStatus(c)}
+            changedBy={statusChangedBy(c)}
+            changedAt={statusChangedAt(c)}
           />
         </td>
         <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
@@ -553,7 +557,7 @@ export default function PriorityView({
       {/* 목록 테이블 */}
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-sm">
+          <table className="w-full min-w-[1400px] text-sm">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs text-slate-500">
                 <th className="px-4 py-3 font-medium">#</th>
