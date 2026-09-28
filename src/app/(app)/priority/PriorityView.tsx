@@ -331,6 +331,7 @@ export default function PriorityView({
             source={sourceOf(c)}
             refId={c.id}
             initial={effectiveAssignee(c)}
+            label={c.customer_name}
           />
         </td>
         <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
@@ -340,16 +341,23 @@ export default function PriorityView({
             initial={effectiveStatus(c)}
             log={logMap.get(`${sourceOf(c)}:${c.id}`) ?? EMPTY_LOG}
             onLogChanged={loadLog}
+            label={c.customer_name}
           />
         </td>
         <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-          <DesignMemoCell source={sourceOf(c)} refId={c.id} initial={memoOf(c)} />
+          <DesignMemoCell
+            source={sourceOf(c)}
+            refId={c.id}
+            initial={memoOf(c)}
+            label={c.customer_name}
+          />
         </td>
         <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
           <DesignReviewCell
             source={sourceOf(c)}
             refId={c.id}
             initial={effectiveApproved(c)}
+            label={c.customer_name}
           />
         </td>
         <td className={`px-4 py-3 ${tDim}`}>{noteOf(c)}</td>

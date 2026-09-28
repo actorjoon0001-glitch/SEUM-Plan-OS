@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { MEMBERS } from "@/lib/members";
 import { useUser } from "@/components/UserContext";
+import { logActivity } from "@/lib/activity";
 
 /**
  * 설계담당 배정 드롭박스 (우선순위 표).
@@ -15,12 +16,14 @@ export default function DesignAssigneeCell({
   source,
   refId,
   initial,
+  label,
 }: {
   source: "contract" | "econtract";
   refId: number;
   initial: string | null;
+  label?: string | null;
 }) {
-  const { canEdit } = useUser();
+  const { canEdit, session } = useUser();
   const [value, setValue] = useState(initial ?? "");
   const [state, setState] = useState<"idle" | "saving" | "done" | "error">(
     "idle",
@@ -57,6 +60,12 @@ export default function DesignAssigneeCell({
       );
       if (error) throw error;
       setState("done");
+      logActivity({
+        actorEmail: session?.user.email,
+        action: "설계담당 변경",
+        target: label,
+        detail: `→ ${next || "미지정"}`,
+      });
     } catch {
       setState("error");
     }

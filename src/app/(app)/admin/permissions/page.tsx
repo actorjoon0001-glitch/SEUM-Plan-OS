@@ -7,6 +7,7 @@ import { useUser } from "@/components/UserContext";
 import { createClient } from "@/lib/supabase/client";
 import { isAdmin } from "@/lib/admin";
 import { defaultTeamCanEdit } from "@/lib/permissions";
+import { logActivity } from "@/lib/activity";
 
 interface TeamRow {
   team: string;
@@ -86,6 +87,12 @@ export default function PermissionsPage() {
         .from("plan_os_team_perms")
         .upsert({ team, can_edit: canEdit }, { onConflict: "team" });
       if (error) throw error;
+      logActivity({
+        actorEmail: session?.user.email,
+        action: "권한 변경",
+        target: team,
+        detail: canEdit ? "수정 허용" : "보기 전용",
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
