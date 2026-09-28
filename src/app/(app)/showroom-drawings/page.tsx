@@ -5,10 +5,20 @@ import PageHeader from "@/components/PageHeader";
 import DrawingUpload from "@/components/DrawingUpload";
 import { SHOWROOM_MODELS } from "@/lib/showrooms";
 
+type Selected = number | "all";
+
 export default function ShowroomDrawingsPage() {
-  const [selected, setSelected] = useState(SHOWROOM_MODELS[0].id);
-  const current =
-    SHOWROOM_MODELS.find((s) => s.id === selected) ?? SHOWROOM_MODELS[0];
+  const [selected, setSelected] = useState<Selected>("all");
+
+  const options: { key: Selected; name: string }[] = [
+    { key: "all", name: "전체" },
+    ...SHOWROOM_MODELS.map((s) => ({ key: s.id as Selected, name: s.name })),
+  ];
+
+  const shown =
+    selected === "all"
+      ? SHOWROOM_MODELS
+      : SHOWROOM_MODELS.filter((s) => s.id === selected);
 
   return (
     <>
@@ -19,31 +29,35 @@ export default function ShowroomDrawingsPage() {
 
       {/* 전시장 선택 */}
       <div className="mb-4 flex flex-wrap gap-2">
-        {SHOWROOM_MODELS.map((s) => (
+        {options.map((o) => (
           <button
-            key={s.id}
+            key={String(o.key)}
             type="button"
-            onClick={() => setSelected(s.id)}
+            onClick={() => setSelected(o.key)}
             className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
-              selected === s.id
+              selected === o.key
                 ? "bg-brand-600 text-white"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
-            {s.name}
+            {o.name}
           </button>
         ))}
       </div>
 
-      {/* 선택한 전시장의 도면 */}
-      <DrawingUpload
-        key={current.id}
-        ownerId={current.id}
-        source="showroom"
-        bucket="construction-drawings"
-        title={`${current.name} · 전시모델 도면`}
-        description="이 전시장의 전시모델 도면을 업로드·열람합니다. (이미지·PDF)"
-      />
+      {/* 선택한 전시장(들)의 도면 */}
+      <div className="space-y-4">
+        {shown.map((s) => (
+          <DrawingUpload
+            key={s.id}
+            ownerId={s.id}
+            source="showroom"
+            bucket="construction-drawings"
+            title={`${s.name} · 전시모델 도면`}
+            description="이 전시장의 전시모델 도면을 업로드·열람합니다. (이미지·PDF)"
+          />
+        ))}
+      </div>
     </>
   );
 }
