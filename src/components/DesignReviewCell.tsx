@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/components/UserContext";
+import { logActivity } from "@/lib/activity";
 
 /**
  * 검토자 승인 토글 (우선순위/검토자 표).
@@ -14,12 +15,14 @@ export default function DesignReviewCell({
   source,
   refId,
   initial,
+  label,
 }: {
   source: "contract" | "econtract";
   refId: number;
   initial: boolean;
+  label?: string | null;
 }) {
-  const { canEdit } = useUser();
+  const { canEdit, session } = useUser();
   const [approved, setApproved] = useState(initial);
   const [state, setState] = useState<"idle" | "saving" | "done" | "error">(
     "idle",
@@ -52,6 +55,11 @@ export default function DesignReviewCell({
       );
       if (error) throw error;
       setState("done");
+      logActivity({
+        actorEmail: session?.user.email,
+        action: next ? "검토 승인" : "승인 취소",
+        target: label,
+      });
     } catch {
       setApproved(!next); // 롤백
       setState("error");

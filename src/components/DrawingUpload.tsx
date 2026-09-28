@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/components/UserContext";
+import { logActivity } from "@/lib/activity";
 
 interface FileItem {
   id: number;
@@ -160,6 +161,12 @@ export default function DrawingUpload({
           await sb.storage.from(bucket).remove([key]);
           throw ins.error;
         }
+        logActivity({
+          actorEmail: actorEmail,
+          action: "도면 업로드",
+          target: title,
+          detail: file.name,
+        });
       }
       await load();
     } catch (e) {
@@ -183,6 +190,12 @@ export default function DrawingUpload({
         .update({ deleted_by: actorEmail, deleted_at: new Date().toISOString() })
         .eq("id", item.id);
       if (error) throw error;
+      logActivity({
+        actorEmail: actorEmail,
+        action: "도면 삭제",
+        target: title,
+        detail: item.label,
+      });
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "삭제 실패");

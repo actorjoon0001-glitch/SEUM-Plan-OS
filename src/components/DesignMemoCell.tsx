@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/components/UserContext";
+import { logActivity } from "@/lib/activity";
 
 /**
  * 설계 메모 입력 셀 (우선순위 표).
@@ -13,12 +14,14 @@ export default function DesignMemoCell({
   source,
   refId,
   initial,
+  label,
 }: {
   source: "contract" | "econtract";
   refId: number;
   initial: string;
+  label?: string | null;
 }) {
-  const { canEdit } = useUser();
+  const { canEdit, session } = useUser();
   const [value, setValue] = useState(initial);
   const [saved, setSaved] = useState(initial);
   const [state, setState] = useState<"idle" | "saving" | "done" | "error">(
@@ -47,6 +50,12 @@ export default function DesignMemoCell({
       if (error) throw error;
       setSaved(v);
       setState("done");
+      logActivity({
+        actorEmail: session?.user.email,
+        action: "메모 변경",
+        target: label,
+        detail: v || "(삭제)",
+      });
     } catch {
       setState("error");
     }

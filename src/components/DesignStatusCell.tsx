@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { DESIGN_STATUS_OPTIONS, designStatusTone } from "@/lib/priority";
 import { useUser } from "@/components/UserContext";
 import { isAdmin } from "@/lib/admin";
+import { logActivity } from "@/lib/activity";
 
 /** 상태 변경 이력 1건 (design_status_log) */
 export interface StatusLogEntry {
@@ -40,12 +41,14 @@ export default function DesignStatusCell({
   initial,
   log = [],
   onLogChanged,
+  label,
 }: {
   source: "contract" | "econtract";
   refId: number;
   initial: string;
   log?: StatusLogEntry[];
   onLogChanged?: () => void;
+  label?: string | null;
 }) {
   const { canEdit, session, employee } = useUser();
   const admin = isAdmin(session?.user.email);
@@ -144,6 +147,12 @@ export default function DesignStatusCell({
         });
         onLogChanged?.();
       } catch {}
+      logActivity({
+        actorEmail: session?.user.email,
+        action: "설계진행 상태 변경",
+        target: label,
+        detail: `→ ${next}`,
+      });
       setState("done");
     } catch {
       setState("error");
