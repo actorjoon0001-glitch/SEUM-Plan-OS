@@ -104,6 +104,12 @@ export const navSections: NavSection[] = [
         description: "계약별 시공도면 (3D 포함)",
         icon: "M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12",
       },
+      {
+        href: "/showroom-drawings",
+        label: "전시모델 도면",
+        description: "전시장별 전시모델 도면",
+        icon: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-16 0H3m9-13.5V9m0 0V6.5M12 9h2.5M12 9H9.5",
+      },
     ],
   },
   {
