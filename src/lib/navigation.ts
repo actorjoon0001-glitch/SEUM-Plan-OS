@@ -113,6 +113,29 @@ export const navSections: NavSection[] = [
     ],
   },
   {
+    title: "외부 건축 협력사",
+    items: [
+      {
+        href: "/partners/haeyoung",
+        label: "해영 건축사",
+        description: "해영 건축사 협력 건",
+        icon: "M3 21h18M5 21V7l8-4v18M19 21V11l-6-3M9 9h.01M9 12h.01M9 15h.01M9 18h.01",
+      },
+      {
+        href: "/partners/pil",
+        label: "필건축사",
+        description: "필 건축사 협력 건",
+        icon: "M3 21h18M5 21V7l8-4v18M19 21V11l-6-3M9 9h.01M9 12h.01M9 15h.01M9 18h.01",
+      },
+      {
+        href: "/partners/civil",
+        label: "토목건축사",
+        description: "토목 건축사 협력 건",
+        icon: "M3 21h18M5 21V7l8-4v18M19 21V11l-6-3M9 9h.01M9 12h.01M9 15h.01M9 18h.01",
+      },
+    ],
+  },
+  {
     title: "관리자",
     items: [
       {
@@ -135,29 +158,6 @@ export const navSections: NavSection[] = [
         description: "팀별 수정 권한 설정",
         adminOnly: true,
         icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065zM15 12a3 3 0 11-6 0 3 3 0 016 0z",
-      },
-    ],
-  },
-  {
-    title: "외부 건축 협력사",
-    items: [
-      {
-        href: "/partners/haeyoung",
-        label: "해영 건축사",
-        description: "해영 건축사 협력 건",
-        icon: "M3 21h18M5 21V7l8-4v18M19 21V11l-6-3M9 9h.01M9 12h.01M9 15h.01M9 18h.01",
-      },
-      {
-        href: "/partners/pil",
-        label: "필건축사",
-        description: "필 건축사 협력 건",
-        icon: "M3 21h18M5 21V7l8-4v18M19 21V11l-6-3M9 9h.01M9 12h.01M9 15h.01M9 18h.01",
-      },
-      {
-        href: "/partners/civil",
-        label: "토목건축사",
-        description: "토목 건축사 협력 건",
-        icon: "M3 21h18M5 21V7l8-4v18M19 21V11l-6-3M9 9h.01M9 12h.01M9 15h.01M9 18h.01",
       },
     ],
   },
