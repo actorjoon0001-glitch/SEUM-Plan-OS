@@ -223,6 +223,7 @@ export default function PriorityView({
         const hay = [
           c.customer_name,
           c.model_name,
+          c.sales_person,
           regionOf(c),
           showroomOf(c),
           c.local_id,
@@ -577,7 +578,7 @@ export default function PriorityView({
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="건축주명, 지역, 주소, 모델 검색"
+            placeholder="건축주명, 영업사원, 지역, 주소, 모델 검색"
             className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
           />
         </div>
