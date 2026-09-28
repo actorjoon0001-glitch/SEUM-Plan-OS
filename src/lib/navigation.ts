@@ -141,16 +141,9 @@ export const navSections: NavSection[] = [
       {
         href: "/admin",
         label: "로그인 기록",
-        description: "설계os 로그인 이력",
+        description: "로그인·작업 기록",
         adminOnly: true,
         icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
-      },
-      {
-        href: "/admin/activity",
-        label: "활동 기록",
-        description: "누가 어떤 작업을 했는지",
-        adminOnly: true,
-        icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01",
       },
       {
         href: "/admin/permissions",
