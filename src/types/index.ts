@@ -147,6 +147,8 @@ export interface EContract {
   data: unknown;
   /** 진행상태 (data.stage): negotiating(협의중)/completed(계약완료)/delivered(납품완료) 등 */
   stage?: string | null;
+  /** 휴지통 삭제 시각 (data.deletedAt) — 값 있으면 삭제(휴지통) 건 */
+  deleted_at?: string | null;
   /** 첨부 도면 수 (data.drawingCount) — 경량 조회용 */
   drawing_count?: number | string | null;
   /** 신분증 첨부 수 (data.idCount) — 경량 조회용 */

@@ -383,12 +383,25 @@ export function sortPriority(list: Contract[], _tab: TabKey): Contract[] {
 }
 
 /**
+ * 전자계약이 휴지통(삭제)인지 여부.
+ * 경량 조회는 deleted_at(data->>deletedAt), 전체 조회는 data.deletedAt 로 판단.
+ */
+export function econtractDeleted(e: EContract): boolean {
+  if (e.deleted_at) return true;
+  const d = e.data;
+  if (d && typeof d === "object" && !Array.isArray(d)) {
+    return Boolean((d as Record<string, unknown>).deletedAt);
+  }
+  return false;
+}
+
+/**
  * 전자계약이 설계 우선순위 대상인지 여부.
- * 진행상태(data.stage)가 'completed'(계약완료 = 체결 + 계약금 10% 수령) 인 건만.
- * ('negotiating'=협의중, 'delivered'=납품완료, 'draft' 등은 제외)
+ * 진행상태(data.stage)가 'completed'(계약완료 = 체결 + 계약금 10% 수령) 이고
+ * 휴지통(삭제)이 아닌 건만.
  */
 export function econtractQualifies(e: EContract): boolean {
-  return (e.stage?.trim() ?? "") === "completed";
+  return (e.stage?.trim() ?? "") === "completed" && !econtractDeleted(e);
 }
 
 /**
@@ -446,12 +459,15 @@ export function buildDesignQueue(
   econtracts: EContract[],
   assigneeMap: Map<string, AssignRecord>,
 ): Contract[] {
-  // 전자계약이 걸려있는 계약번호/고객명 (상태 무관)
+  // 휴지통(삭제) 전자계약은 전부 제외하고 처리
+  const liveEcon = econtracts.filter((e) => !econtractDeleted(e));
+
+  // 전자계약이 걸려있는 계약번호/고객명 (상태 무관, 휴지통 제외)
   const econContractNos = new Set(
-    econtracts.map((e) => e.contract_no).filter(Boolean) as string[],
+    liveEcon.map((e) => e.contract_no).filter(Boolean) as string[],
   );
   const econClientNames = new Set(
-    econtracts.map((e) => e.client_name).filter(Boolean) as string[],
+    liveEcon.map((e) => e.client_name).filter(Boolean) as string[],
   );
 
   const contractItems = contracts.filter(depositReceived).filter((c) => {
@@ -467,7 +483,7 @@ export function buildDesignQueue(
     if (c.local_id) byLocalId.set(c.local_id, c);
     if (c.customer_name) byCustomer.set(c.customer_name, c);
   }
-  const econItems = econtracts.filter(econtractQualifies).map((e) => {
+  const econItems = liveEcon.filter(econtractQualifies).map((e) => {
     const matched =
       (e.contract_no ? byLocalId.get(e.contract_no) : undefined) ??
       (e.client_name ? byCustomer.get(e.client_name) : undefined);
