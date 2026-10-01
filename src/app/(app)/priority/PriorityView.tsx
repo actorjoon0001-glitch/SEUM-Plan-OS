@@ -307,7 +307,7 @@ export default function PriorityView({
             )}
           </span>
         </td>
-        <td className={`px-4 py-3 font-medium ${tStrong}`}>
+        <td className={`whitespace-nowrap px-4 py-3 font-medium ${tStrong}`}>
           <span className="flex items-center gap-1.5">
             {c.is_urgent && (
               <span className="rounded bg-rose-100 px-1 text-[10px] font-bold text-rose-600">
@@ -317,9 +317,9 @@ export default function PriorityView({
             {c.customer_name ?? "-"}
           </span>
         </td>
-        <td className={`px-4 py-3 ${t}`}>{c.model_name ?? "-"}</td>
+        <td className={`whitespace-nowrap px-4 py-3 ${t}`}>{c.model_name ?? "-"}</td>
         <td className={`whitespace-nowrap px-4 py-3 ${t}`}>{showroomOf(c)}</td>
-        <td className={`px-4 py-3 ${t}`}>{regionOf(c)}</td>
+        <td className={`whitespace-nowrap px-4 py-3 ${t}`}>{regionOf(c)}</td>
         <td className={`whitespace-nowrap px-4 py-3 ${t}`}>
           {c.sales_person ?? "-"}
         </td>
