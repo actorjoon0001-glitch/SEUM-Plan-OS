@@ -75,7 +75,7 @@ export function getContracts() {
       .from("contracts")
       .select("*")
       .order("contract_date", { ascending: false, nullsFirst: false })
-      .limit(500);
+      .limit(2000);
     if (error) throw new Error(error.message);
     return notDeleted((data ?? []) as Contract[]);
   });
@@ -282,7 +282,7 @@ export function getEContracts() {
       .from("econtracts")
       .select("*")
       .order("contract_date", { ascending: false, nullsFirst: false })
-      .limit(500);
+      .limit(2000);
     if (error) throw new Error(error.message);
     // 휴지통(data.deletedAt) 건 제외
     return ((data ?? []) as EContract[]).filter((e) => {
@@ -308,7 +308,7 @@ export function getEContractsLite() {
         "id, contract_no, status, client_name, site_address, showroom, salesperson, contract_date, total_amount, created_at, updated_at, stage:data->>stage, deleted_at:data->>deletedAt, drawing_count:data->>drawingCount, id_count:data->>idCount",
       )
       .order("contract_date", { ascending: false, nullsFirst: false })
-      .limit(500);
+      .limit(2000);
     if (error) throw new Error(error.message);
     return (data ?? []) as EContract[];
   });
