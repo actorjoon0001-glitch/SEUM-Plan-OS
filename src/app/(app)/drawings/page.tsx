@@ -13,14 +13,16 @@ export default async function DrawingsPage() {
     getContractShowrooms(),
   ]);
 
-  // local_id → 전시장(정규화) 매핑
+  // local_id → 전시장(정규화) · 모델명 매핑
   const showroomByLocalId = new Map<string, string>();
+  const modelByLocalId = new Map<string, string>();
   for (const c of csRes.data) {
     if (c.local_id) {
       showroomByLocalId.set(
         c.local_id,
         showroomOf({ showroom_id: c.showroom_id } as unknown as Contract),
       );
+      if (c.model_name) modelByLocalId.set(c.local_id, c.model_name);
     }
   }
 
@@ -28,6 +30,9 @@ export default async function DrawingsPage() {
     ...d,
     showroom: d.contract_local_id
       ? showroomByLocalId.get(d.contract_local_id) ?? ""
+      : "",
+    model: d.contract_local_id
+      ? modelByLocalId.get(d.contract_local_id) ?? ""
       : "",
   }));
 
