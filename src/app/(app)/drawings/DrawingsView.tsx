@@ -17,7 +17,7 @@ function kindLabel(k: string): string {
   return KIND_LABEL[k] ?? k;
 }
 
-type DrawingRow = ContractDrawing & { showroom?: string };
+type DrawingRow = ContractDrawing & { showroom?: string; model?: string };
 
 export default function DrawingsView({
   drawings,
@@ -48,7 +48,7 @@ export default function DrawingsView({
         if (showroom === "미분류" ? sr !== "" : sr !== showroom) return false;
       }
       if (!q) return true;
-      return [d.file_name, d.contract_local_id, d.uploaded_by, d.showroom]
+      return [d.file_name, d.contract_local_id, d.uploaded_by, d.showroom, d.model]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q));
     });
@@ -94,6 +94,7 @@ export default function DrawingsView({
               <tr className="border-b border-slate-100 text-left text-xs text-slate-400">
                 <th className="px-5 py-3 font-medium">파일명</th>
                 <th className="px-5 py-3 font-medium">전시장</th>
+                <th className="px-5 py-3 font-medium">모델</th>
                 <th className="px-5 py-3 font-medium">종류</th>
                 <th className="px-5 py-3 font-medium">계약</th>
                 <th className="px-5 py-3 font-medium">형식</th>
@@ -115,6 +116,9 @@ export default function DrawingsView({
                     ) : (
                       <span className="text-slate-300">-</span>
                     )}
+                  </td>
+                  <td className="whitespace-nowrap px-5 py-3 text-slate-700">
+                    {d.model || <span className="text-slate-300">-</span>}
                   </td>
                   <td className="px-5 py-3">
                     {d.kind ? (
@@ -159,7 +163,7 @@ export default function DrawingsView({
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-5 py-10 text-center text-sm text-slate-400">
+                  <td colSpan={8} className="px-5 py-10 text-center text-sm text-slate-400">
                     조건에 맞는 도면이 없습니다.
                   </td>
                 </tr>

@@ -48,23 +48,27 @@ const notDeleted = <T extends { is_deleted?: boolean | null }>(rows: T[]) =>
 // 계약(프로젝트)
 // ─────────────────────────────────────────────────────────────
 
-/** local_id → showroom_id 경량 목록 (도면 전시장 분류용) */
+/** local_id → showroom_id · model_name 경량 목록 (도면 분류/모델 표시용) */
 export function getContractShowrooms() {
-  return run<{ local_id: string | null; showroom_id: string | null }[]>(
-    [],
-    async () => {
-      const sb = await createClient();
-      const { data, error } = await sb
-        .from("contracts")
-        .select("local_id, showroom_id")
-        .limit(3000);
-      if (error) throw new Error(error.message);
-      return (data ?? []) as {
-        local_id: string | null;
-        showroom_id: string | null;
-      }[];
-    },
-  );
+  return run<
+    {
+      local_id: string | null;
+      showroom_id: string | null;
+      model_name: string | null;
+    }[]
+  >([], async () => {
+    const sb = await createClient();
+    const { data, error } = await sb
+      .from("contracts")
+      .select("local_id, showroom_id, model_name")
+      .limit(3000);
+    if (error) throw new Error(error.message);
+    return (data ?? []) as {
+      local_id: string | null;
+      showroom_id: string | null;
+      model_name: string | null;
+    }[];
+  });
 }
 
 /** 설계팀 대상 계약 목록 (삭제 제외, 최신 계약일 순) */
